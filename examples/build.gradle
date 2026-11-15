@@ -1,0 +1,19 @@
+dependencies {
+    implementation project(':goome')
+}
+
+def examples = ['Hello', 'Grab', 'UiDemo', 'Offscreen', 'Notes', 'Custom', 'Skinned', 'Anything']
+
+examples.each { name ->
+    tasks.register("run$name", JavaExec) {
+        group = 'examples'
+        mainClass = "io.github.goomeui.examples.$name"
+        classpath = sourceSets.main.runtimeClasspath
+        workingDir = rootDir
+        javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+        jvmArgs '--enable-native-access=ALL-UNNAMED'
+        maxHeapSize = '256m'
+        systemProperty 'java.awt.headless', 'true'
+        if (project.hasProperty('args')) args project.property('args').split(' ')
+    }
+}
