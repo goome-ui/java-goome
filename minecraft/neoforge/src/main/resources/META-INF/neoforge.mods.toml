@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "GPL-3.0-only"
+issueTrackerURL = "https://github.com/goome-ui/java-goome/issues"
+
+[[mods]]
+modId = "goome"
+version = "${version}"
+displayName = "goome"
+authors = "sevvy-wevvy"
+description = "goome ui inside minecraft, a menu screen and a hud drawn by goome"
+displayURL = "https://goome-ui.github.io/docs/"
+
+[[dependencies.goome]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neo_version},)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.goome]]
+modId = "minecraft"
+type = "required"
+versionRange = "[${minecraft_version}]"
+ordering = "NONE"
+side = "CLIENT"

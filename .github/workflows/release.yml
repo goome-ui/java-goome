@@ -1,0 +1,42 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  upload:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: jars
+          path: jars/
+      - name: pick the jars
+        run: |
+          v=${TAG#v}
+          grep -qx "version=$v" gradle.properties || { echo "gradle.properties isnt $v"; exit 1; }
+          find jars -name '*.jar'
+          mkdir -p out
+          cp "jars/goome/build/libs/goome-$v.jar" "jars/goome/build/libs/goome-$v-sources.jar" out/
+          for m in fabric neoforge; do
+            for j in jars/minecraft/$m/build/libs/goome-$m-*.jar; do
+              case "$j" in *-sources.jar|*-dev.jar) ;; *) cp "$j" out/ ;; esac
+            done
+          done
+          ls -l out
+      - name: upload
+        run: |
+          gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --verify-tag --title "goome ${TAG#v}" --notes "goome ${TAG#v}"
+          gh release upload "$TAG" out/*.jar --clobber

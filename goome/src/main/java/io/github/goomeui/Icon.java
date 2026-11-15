@@ -1,0 +1,11 @@
+package io.github.goomeui;
+
+public enum Icon {
+    ARROW_DOWN, ARROW_RIGHT, ARROW_UP, ARROW_LEFT,
+    CHECK, RADIO_DOT, CLOSE, MINIMIZE, MAXIMIZE, RESTORE,
+    RESIZE, SORT_UP, SORT_DOWN, PLUS, MINUS,
+    SLIDER_KNOB, TOGGLE_KNOB, COLLAPSE, EXPAND, DRAG_HANDLE,
+    TOAST, PICKER;
+
+    public static final int COUNT = 22;
+}

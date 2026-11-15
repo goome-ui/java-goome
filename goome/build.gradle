@@ -1,0 +1,82 @@
+def os = System.getProperty('os.name').toLowerCase()
+def arm = System.getProperty('os.arch') in ['aarch64', 'arm64']
+def lwjglNatives = os.contains('win') ? 'natives-windows' : os.contains('mac') ? (arm ? 'natives-macos-arm64' : 'natives-macos') : (arm ? 'natives-linux-arm64' : 'natives-linux')
+
+sourceSets {
+    ffm {
+        compileClasspath += main.output
+    }
+    test {
+        runtimeClasspath += ffm.output
+    }
+}
+
+tasks.named('compileFfmJava') {
+    options.release = 22
+    options.compilerArgs += ['-Xlint:-restricted']
+}
+
+tasks.named('processResources', ProcessResources) {
+    from("$rootDir/build/natives") {
+        into 'natives'
+    }
+}
+
+dependencies {
+    compileOnly "org.lwjgl:lwjgl:$lwjgl_version"
+    testImplementation platform("org.junit:junit-bom:$junit_version")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly "org.lwjgl:lwjgl:$lwjgl_version"
+    testRuntimeOnly "org.lwjgl:lwjgl:$lwjgl_version:$lwjglNatives"
+}
+
+jar {
+    from sourceSets.ffm.output
+    manifest {
+        attributes 'Enable-Native-Access': 'ALL-UNNAMED', 'Implementation-Version': project.version
+    }
+}
+
+java {
+    withSourcesJar()
+}
+
+tasks.named('sourcesJar') {
+    from sourceSets.ffm.allSource
+}
+
+def testJava = (findProperty('testJava') ?: '25') as int
+
+def setup = { Test t, String backend ->
+    t.useJUnitPlatform()
+    t.testClassesDirs = sourceSets.test.output.classesDirs
+    t.classpath = sourceSets.test.runtimeClasspath
+    t.systemProperty 'goome.native', backend
+    t.systemProperty 'goome.cache', layout.buildDirectory.dir('goome-cache').get().asFile.path
+    t.systemProperty 'goome.root', rootDir.path
+    t.systemProperty 'java.io.tmpdir', layout.buildDirectory.dir('tmp/test').get().asFile.path
+    t.environment 'GOOME_BACKEND', ''
+    if (backend == 'ffm') t.jvmArgs '--enable-native-access=ALL-UNNAMED'
+    t.maxHeapSize = '256m'
+    t.testLogging {
+        events 'failed', 'skipped'
+        exceptionFormat 'full'
+    }
+    t.doFirst { layout.buildDirectory.dir('tmp/test').get().asFile.mkdirs() }
+    t.inputs.dir("$rootDir/build/natives").optional()
+}
+
+tasks.named('test', Test) {
+    setup(it, testJava >= 22 ? 'ffm' : 'lwjgl')
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(testJava) }
+}
+
+tasks.register('testLwjgl', Test) {
+    setup(it, 'lwjgl')
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(testJava) }
+}
+
+tasks.named('check') {
+    dependsOn 'testLwjgl'
+}

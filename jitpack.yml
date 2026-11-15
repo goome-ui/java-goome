@@ -1,0 +1,4 @@
+jdk:
+  - openjdk17
+install:
+  - v=$(grep ^version= gradle.properties | cut -d= -f2) && curl -fsSL -o goome.jar https://github.com/goome-ui/java-goome/releases/download/v$v/goome-$v.jar && curl -fsSL -o goome-sources.jar https://github.com/goome-ui/java-goome/releases/download/v$v/goome-$v-sources.jar && mvn -B install:install-file -Dfile=goome.jar -Dsources=goome-sources.jar -DgroupId=com.github.goome-ui -DartifactId=java-goome -Dversion=$VERSION -Dpackaging=jar
