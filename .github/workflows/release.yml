@@ -1,0 +1,79 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  upload:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: jars
+          path: jars/
+      - name: pick the jars
+        run: |
+          v=${TAG#v}
+          grep -qx "version=$v" gradle.properties || { echo "gradle.properties isnt $v"; exit 1; }
+          find jars -name '*.jar'
+          mkdir -p out
+          cp "jars/goome/build/libs/goome-$v.jar" "jars/goome/build/libs/goome-$v-sources.jar" out/
+          for m in fabric neoforge; do
+            for j in jars/minecraft/$m/build/libs/goome-$m-*.jar; do
+              case "$j" in *-sources.jar|*-dev.jar) ;; *) cp "$j" out/ ;; esac
+            done
+          done
+          ls -l out
+      - name: upload
+        run: |
+          gh release view "$TAG" > /dev/null 2>&1 || gh release create "$TAG" --verify-tag --title "goome ${TAG#v}" --notes "goome ${TAG#v}"
+          gh release upload "$TAG" out/*.jar --clobber
+
+  central:
+    needs: upload
+    runs-on: ubuntu-latest
+    env:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: maven
+          path: staging/
+      - name: sign and send to maven central
+        run: |
+          if [ -z "$GPG_PRIVATE_KEY" ] || [ -z "$CENTRAL_USERNAME" ] || [ -z "$CENTRAL_PASSWORD" ]; then
+            echo "no GPG_PRIVATE_KEY or CENTRAL_* secrets, skipping maven central"
+            exit 0
+          fi
+          v=${TAG#v}
+          test -d "staging/io/github/goome-ui/goome/$v" || { echo "no goome $v in the maven artifact"; find staging -type f; exit 1; }
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -m 700 -p "$GNUPGHOME"
+          printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          find staging -type f ! -name '*.md5' ! -name '*.sha1' ! -name '*.sha256' ! -name '*.sha512' ! -name 'maven-metadata*' | while read -r f; do
+            gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --armor --detach-sign "$f"
+          done
+          find staging -name 'maven-metadata*' -delete
+          (cd staging && zip -qr "$GITHUB_WORKSPACE/central.zip" io)
+          unzip -l central.zip
+          auth=$(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w0)
+          curl -fsS -X POST -H "Authorization: Bearer $auth" -F "bundle=@central.zip" \
+            "https://central.sonatype.com/api/v1/publisher/upload?name=goome-$v&publishingType=USER_MANAGED"
+          echo
+          echo "uploaded, press Publish on central.sonatype.com/publishing/deployments"

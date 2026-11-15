@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "goome",
+  "version": "${version}",
+  "name": "goome",
+  "description": "goome ui inside minecraft, a menu screen and a hud drawn by goome",
+  "authors": ["sevvy-wevvy"],
+  "contact": {
+    "homepage": "https://goome-ui.github.io/docs/",
+    "sources": "https://github.com/goome-ui/java-goome"
+  },
+  "license": "GPL-3.0-only",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["io.github.goomeui.mc.fabric.GoomeFabric"]
+  },
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

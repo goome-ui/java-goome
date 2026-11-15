@@ -1,0 +1,176 @@
+name: ci
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+  JDKS: -Porg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64,JAVA_HOME_17_ARM64,JAVA_HOME_25_X64,JAVA_HOME_25_ARM64 -Porg.gradle.java.installations.auto-download=false
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GOOME_STRICT: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            25
+      - name: native lib
+        run: WERROR=1 ./build.sh
+      - name: tests on java 25, ffm and lwjgl 3.3
+        run: ./gradlew $JDKS :goome:test :goome:testLwjgl :minecraft:common:test
+      - name: tests on java 17, lwjgl
+        run: ./gradlew $JDKS -PtestJava=17 :goome:test --rerun
+      - name: lwjgl 3.4 like minecraft ships
+        run: ./gradlew $JDKS -Plwjgl_version=3.4.3 :goome:testLwjgl --rerun
+      - name: examples on the test backend
+        env:
+          GOOME_BACKEND: test
+        run: |
+          mkdir -p build/ci/hello build/ci/ui build/ci/custom build/ci/skinned
+          GOOME_TEST_SHOTS=build/ci/hello GOOME_TEST_SCRIPT="screen 640x360 1; 2 click 120,110; 3 click 150,190; 4 key hi; 5 hotkey alt+h; 6 hotkey alt+h; end 8" ./gradlew $JDKS -q :examples:runHello
+          GOOME_TEST_SHOTS=build/ci/ui GOOME_TEST_SCRIPT="screen 1280x720 1; 3 click 100,150; 6 click 200,90; end 10" ./gradlew $JDKS -q :examples:runUiDemo
+          GOOME_TEST_SCRIPT="screen 640x360 1; end 3" ./gradlew $JDKS -q :examples:runGrab "-Pargs=0 10 10 100 50 build/ci/grab.ppm"
+          GOOME_TEST_SCRIPT="screen 1x1 1; 2 click 30,12; 4 key hello; 6 close; end 10" ./gradlew $JDKS -q :examples:runNotes
+          GOOME_TEST_SHOTS=build/ci/custom GOOME_TEST_SCRIPT="screen 1120x800 1; 3 hold 700,150 4; 8 click 640,330; end 12" ./gradlew $JDKS -q :examples:runCustom
+          GOOME_TEST_SHOTS=build/ci/skinned GOOME_TEST_SCRIPT="screen 980x680 1; 3 click 60,200; 5 move 300,330; 8 click 700,330; end 12" ./gradlew $JDKS -q :examples:runSkinned
+          ./gradlew $JDKS -q :examples:runOffscreen -Pargs=build/ci/offscreen.png
+          test -s build/ci/grab.ppm
+          test -s build/ci/offscreen.png
+          test "$(ls build/ci/hello | wc -l)" -gt 3
+          test "$(ls build/ci/custom | wc -l)" -gt 3
+          test "$(ls build/ci/skinned | wc -l)" -gt 3
+      - name: same pixels as the c examples
+        if: runner.os != 'Windows'
+        env:
+          GOOME_BACKEND: test
+        run: |
+          v=$(cat native/VERSION)
+          mkdir -p build/c build/ci/c/hello build/ci/c/ui build/ci/c/skinned
+          ${CC:-cc} -O2 -std=c99 -Inative -c -o build/c/goome_lib.o native/goome_lib.c
+          printf 'long still_clock(void) { return 0; }\n' > build/c/still_clock.c
+          for e in hello ui skinned; do
+            if ! curl -fsSL "https://raw.githubusercontent.com/goome-ui/c-goome/$v/examples/$e.c" -o build/c/$e.c; then
+              echo "c-goome $v isnt on github, using the $e.c from dev"
+              curl -fsSL "https://raw.githubusercontent.com/goome-ui/c-goome/dev/examples/$e.c" -o build/c/$e.c || { echo "cant get $e.c, skipping the c compare"; exit 0; }
+            fi
+            clock=()
+            [ "$e" = ui ] && clock=(-Dgoome_now_ms=still_clock build/c/still_clock.c)
+            ${CC:-cc} -O2 -std=c99 -Inative "${clock[@]}" -o build/c/$e build/c/$e.c build/c/goome_lib.o
+          done
+          GOOME_TEST_SHOTS=build/ci/c/hello GOOME_TEST_SCRIPT="screen 640x360 1; 2 click 120,110; 3 click 150,190; 4 key hi; 5 hotkey alt+h; 6 hotkey alt+h; end 8" build/c/hello > /dev/null
+          GOOME_TEST_SHOTS=build/ci/c/ui GOOME_TEST_SCRIPT="screen 1280x720 1; 3 click 100,150; 6 click 200,90; end 10" build/c/ui > /dev/null
+          GOOME_TEST_SHOTS=build/ci/c/skinned GOOME_TEST_SCRIPT="screen 980x680 1; 3 click 60,200; 5 move 300,330; 8 click 700,330; end 12" build/c/skinned > /dev/null
+          for e in hello ui skinned; do
+            n=$(ls build/ci/c/$e | wc -l)
+            [ "$n" -gt 0 ] && [ "$n" = "$(ls build/ci/$e | wc -l)" ] || { echo "$e: different frame count"; exit 1; }
+            for f in build/ci/c/$e/*; do cmp "$f" "build/ci/$e/$(basename "$f")" || { echo "$e: $(basename "$f") differs from the c one"; exit 1; }; done
+            echo "$e: all $n frames match the c example"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.os }}
+          path: build/natives/
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: reports-${{ matrix.os }}
+          path: |
+            goome/build/reports/
+            minecraft/common/build/reports/
+          if-no-files-found: ignore
+
+  jars:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: build/natives/
+          merge-multiple: true
+      - name: library jar with every native lib
+        run: |
+          find build/natives -type f
+          ./gradlew -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64 :goome:jar :goome:sourcesJar
+          unzip -l goome/build/libs/goome-*[0-9].jar | tee build/contents.txt
+          for f in natives/linux-x64/libgoome.so natives/windows-x64/goome.dll natives/macos-arm64/libgoome.dylib natives/macos-x64/libgoome.dylib io/github/goomeui/FfmNative.class io/github/goomeui/LwjglNative.class; do
+            grep -q "$f" build/contents.txt || { echo "missing $f in the jar"; exit 1; }
+          done
+      - name: maven central layout
+        run: |
+          ./gradlew -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64 :goome:publishMavenPublicationToStagingRepository
+          v=$(grep ^version= gradle.properties | cut -d= -f2)
+          d=build/staging-deploy/io/github/goome-ui/goome/$v
+          find build/staging-deploy -type f | sort
+          for f in goome-$v.jar goome-$v-sources.jar goome-$v-javadoc.jar goome-$v.pom goome-$v.module; do
+            for x in "" .md5 .sha1; do test -s "$d/$f$x" || { echo "missing $f$x"; exit 1; }; done
+          done
+          for t in name description url licenses developers scm; do grep -q "<$t>" "$d/goome-$v.pom" || { echo "pom has no <$t>"; exit 1; }; done
+          unzip -l "$d/goome-$v-javadoc.jar" | grep -q 'io/github/goomeui/Goome.html' || { echo "javadoc jar is empty"; exit 1; }
+          cmp "$d/goome-$v.jar" goome/build/libs/goome-$v.jar
+      - name: use the jar from a plain java program
+        run: |
+          mkdir -p build/try
+          cat > build/try/Try.java <<'JAVA'
+          import io.github.goomeui.*;
+          public class Try {
+              public static void main(String[] a) {
+                  try (Goome g = Goome.openOffscreen(200, 100, 1)) {
+                      g.frame(0, c -> c.rect(0, 0, 10, 10, 0xFF102030));
+                      int p = g.lastFrame().pixel(5, 5);
+                      System.out.println(Goome.nativeKind() + " " + g.backendName() + " " + Integer.toHexString(p));
+                      if (p != 0xFF102030) System.exit(1);
+                  }
+              }
+          }
+          JAVA
+          jar=$(ls goome/build/libs/goome-*[0-9].jar)
+          java --enable-native-access=ALL-UNNAMED -Dgoome.cache=build/try/cache -cp "$jar" build/try/Try.java
+      - name: fabric mod
+        run: ../../gradlew -Dorg.gradle.jvmargs=-Xmx3g -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64 build
+        working-directory: minecraft/fabric
+      - name: neoforge mod
+        run: ../../gradlew -Dorg.gradle.jvmargs=-Xmx3g -Porg.gradle.java.installations.fromEnv=JAVA_HOME_25_X64 build
+        working-directory: minecraft/neoforge
+      - name: mod jars have goome in them
+        run: |
+          for j in minecraft/fabric/build/libs/goome-fabric-*[0-9].jar minecraft/neoforge/build/libs/goome-neoforge-*[0-9].jar; do
+            echo "$j"
+            unzip -l "$j" > build/mod.txt
+            for f in io/github/goomeui/mc/GoomeScreen.class io/github/goomeui/mc/GoomeHud.class io/github/goomeui/LwjglNative.class natives/linux-x64/libgoome.so natives/windows-x64/goome.dll natives/macos-arm64/libgoome.dylib assets/goome/lang/en_us.json; do
+              grep -q "$f" build/mod.txt || { echo "missing $f in $j"; exit 1; }
+            done
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jars
+          path: |
+            goome/build/libs/*.jar
+            minecraft/fabric/build/libs/*.jar
+            minecraft/neoforge/build/libs/*.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: maven
+          path: build/staging-deploy/

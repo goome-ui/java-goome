@@ -1,0 +1,21 @@
+dependencies {
+    api project(':goome')
+    testImplementation platform("org.junit:junit-bom:$junit_version")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    classpath += project(':goome').sourceSets.ffm.output
+    systemProperty 'goome.cache', layout.buildDirectory.dir('goome-cache').get().asFile.path
+    systemProperty 'java.io.tmpdir', layout.buildDirectory.dir('tmp/test').get().asFile.path
+    environment 'GOOME_BACKEND', ''
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+    maxHeapSize = '256m'
+    testLogging {
+        events 'failed'
+        exceptionFormat 'full'
+    }
+    doFirst { layout.buildDirectory.dir('tmp/test').get().asFile.mkdirs() }
+}

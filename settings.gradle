@@ -1,0 +1,3 @@
+rootProject.name = 'java-goome'
+
+include 'goome', 'examples', 'minecraft:common'
