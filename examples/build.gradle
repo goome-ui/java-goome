@@ -2,7 +2,7 @@ dependencies {
     implementation project(':goome')
 }
 
-def examples = ['Hello', 'Grab', 'UiDemo', 'Offscreen', 'Notes', 'Custom', 'Skinned', 'Anything']
+def examples = ['Hello', 'Grab', 'UiDemo', 'Offscreen', 'Notes', 'Custom', 'Skinned', 'Anything', 'Anim', 'Text']
 
 examples.each { name ->
     tasks.register("run$name", JavaExec) {

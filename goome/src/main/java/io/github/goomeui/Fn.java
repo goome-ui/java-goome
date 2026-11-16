@@ -191,7 +191,19 @@ enum Fn {
     UI_CONFIG_DEFAULT("vp"),
     UI_BIND("ipip"),
     FRAME_DIRTY("ipp", true),
-    FRAME_COPY("ippiip", true);
+    FRAME_COPY("ippiip", true),
+    EVENT_TEXT("pp", true),
+    PREEDIT_CURSOR("ip", true),
+    TEXT_INPUT("ipip", true),
+    FONT_FALLBACK("vpp", true),
+    TEXT_DIR("vi", true),
+    EASE("did", true),
+    UI_ANIM("dppddi", true),
+    UI_ANIM_COLOR("ippidi", true),
+    UI_A11Y("vpi", true),
+    UI_A11Y_ROLE("vpip", true),
+    UI_A11Y_VALUE("vpp", true),
+    A11Y_TREE("ippi", true);
 
     final String sig;
     final boolean optional;

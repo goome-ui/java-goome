@@ -112,23 +112,23 @@ Overlay is still the default, nothing changes unless you ask for an app or offsc
 <br>
 
 <p align="center">
-It's not on Maven Central. Grab <code>goome-0.4.0.jar</code> from the <a href="https://github.com/goome-ui/java-goome/releases">releases page</a> and drop it on your classpath, it has the native lib for every OS inside, both Macs too. The Fabric and NeoForge mod jars are on there as well.<br> <br>
+It's not on Maven Central. Grab <code>goome-0.5.0.jar</code> from the <a href="https://github.com/goome-ui/java-goome/releases">releases page</a> and drop it on your classpath, it has the native lib for every OS inside, both Macs too. The Fabric and NeoForge mod jars are on there as well.<br> <br>
 In Gradle put it in <code>libs/</code>:
 </p>
 
 ```sh
 mkdir -p libs
-curl -fsSL -o libs/goome-0.4.0.jar https://github.com/goome-ui/java-goome/releases/download/v0.4.0/goome-0.4.0.jar
+curl -fsSL -o libs/goome-0.5.0.jar https://github.com/goome-ui/java-goome/releases/download/v0.5.0/goome-0.5.0.jar
 ```
 
 ```groovy
 dependencies {
-    implementation files('libs/goome-0.4.0.jar')
+    implementation files('libs/goome-0.5.0.jar')
 }
 ```
 
 <p align="center">
-For another version swap <code>0.4.0</code> for it, every one is on the releases page.<br> <br>
+For another version swap <code>0.5.0</code> for it, every one is on the releases page.<br> <br>
 Building it yourself needs a C compiler and a JDK 25 for Gradle (the jar still runs on 17):
 </p>
 
@@ -136,7 +136,7 @@ Building it yourself needs a C compiler and a JDK 25 for Gradle (the jar still r
 git clone https://github.com/goome-ui/java-goome
 cd java-goome
 ./build.sh test      # builds build/natives/<os>/libgoome.so and runs the tests
-./gradlew :goome:jar # goome/build/libs/goome-0.4.0.jar
+./gradlew :goome:jar # goome/build/libs/goome-0.5.0.jar
 ```
 
 <p align="center">
@@ -174,8 +174,8 @@ Making your own: <code>minecraft/common</code> is the part that doesnt touch Min
 
 ```sh
 ./build.sh                                 # native lib for your os
-cd minecraft/fabric && ../../gradlew build # build/libs/goome-fabric-0.4.0.jar
-cd ../neoforge && ../../gradlew build      # build/libs/goome-neoforge-0.4.0.jar
+cd minecraft/fabric && ../../gradlew build # build/libs/goome-fabric-0.5.0.jar
+cd ../neoforge && ../../gradlew build      # build/libs/goome-neoforge-0.5.0.jar
 ```
 
 <p align="center">
@@ -266,6 +266,60 @@ The <a href="https://goome-ui.github.io/docs/">docs</a> cover the rest, from you
 </details>
 
 <details>
+<summary align="center"><b>🎞️ Animations 🎞️</b></summary>
+
+<br>
+
+<p align="center">
+<code>ui.anim(id, target, ms, ease)</code> gives back a number that slides over to the target, and it keeps its spot per id so you just call it every frame. <code>ui.animColor</code> does the same for a color. While anything is still moving <code>ui.animating()</code> is true, so your loop knows to keep drawing.
+</p>
+
+```java
+Item it = ui.custom("card", 0, 80);
+double lift = ui.anim("card lift", it.hovered(), 160, Theme.EASE_OUT);
+int col = ui.animColor("card", it.held() ? 0xFFE0483E : 0xFF2D6CDF, 300, Theme.EASE_IN_OUT);
+```
+
+<p align="center">
+The eases are <code>Theme.EASE_LINEAR</code>, <code>IN</code>, <code>OUT</code>, <code>IN_OUT</code>, <code>SMOOTH</code>, <code>BACK</code>, <code>SPRING</code> and <code>BOUNCE</code>. Spring and back overshoot a bit, thats on purpose. <code>Ui.ease(ease, t)</code> gives you the raw curve if you want it for your own stuff. <code>./gradlew :examples:runAnim</code> shows all of them.
+</p>
+</details>
+
+<details>
+<summary align="center"><b>🈶 Typing With An IME 🈶</b></summary>
+
+<br>
+
+<p align="center">
+Inputs and <code>textEdit</code> turn the IME on by themselves while they have focus, so Japanese, Chinese, Korean and dead keys just work. The text being composed shows underlined at the caret and lands in the box when you commit it.<br> <br>
+If you read events yourself, <code>Goome.TEXT</code> is finished text and <code>Goome.PREEDIT</code> is the stuff still being composed. <code>e.fullText()</code> has all of it (<code>e.msg()</code> gets cut at 63 bytes like in C) and <code>e.caret()</code> is the caret byte offset in the preedit. <code>g.textInput(on, caret)</code> turns it on for your own widget and puts the candidate box next to the caret.<br> <br>
+In an engine, push them in like any other input: <code>ui.feed(Event.typed("日本"))</code> and <code>ui.feed(Event.preedit("にほ", 6))</code>.
+</p>
+</details>
+
+<details>
+<summary align="center"><b>🦮 Screen Readers 🦮</b></summary>
+
+<br>
+
+<p align="center">
+The ui kit builds an accessibility tree from its widgets every frame. In a normal window it goes to the screen reader on its own (AT-SPI on linux, UI Automation on windows, NSAccessibility on mac), you dont have to do anything.<br> <br>
+For your own <code>ui.custom</code> widgets call <code>ui.a11yRole(A11yNode.ROLE_BUTTON, "Knob")</code> and <code>ui.a11yValue("11")</code> right before it so it has a name. Offscreen and overlays keep it off, turn it on with <code>ui.a11y(true)</code>, then <code>ui.a11yTree()</code> gives you a <code>List&lt;A11yNode&gt;</code> (role, label, value, parent, states, where it is) to hand to your engine. <code>ui.a11yPress(node)</code>, <code>a11ySet</code>, <code>a11yExpand</code> and <code>a11yFocus</code> do what a screen reader would.
+</p>
+</details>
+
+<details>
+<summary align="center"><b>😀 Emoji And RTL 😀</b></summary>
+
+<br>
+
+<p align="center">
+Color emoji draw right (COLR, CBDT and sbix fonts), with skin tones, ZWJ sequences and flags. <code>Font.system</code> already adds the system emoji font, and <code>font.fallback(other)</code> adds your own fonts to try for letters the first one doesnt have.<br> <br>
+Arabic and Hebrew lay out right to left, Arabic letters join up, and the caret and selection move the way you'd expect in mixed text. <code>Font.textDir(Font.DIR_RTL)</code> forces the direction, <code>DIR_AUTO</code> (the default) goes by the first strong letter of each line. <code>./gradlew :examples:runText</code> has a bunch of it.
+</p>
+</details>
+
+<details>
 <summary align="center"><b>📚 The API 📚</b></summary>
 
 <br>
@@ -285,7 +339,7 @@ Anything holding native memory is <code>AutoCloseable</code> and closing twice i
 <br>
 
 <p align="center">
-<code>examples/</code> has eight of them, from Hello up to UiDemo and Notes. Most are ports of the C examples with the same name.<br>
+<code>examples/</code> has ten of them, from Hello up to UiDemo and Notes, plus Anim and Text for the newer stuff. Most are ports of the C examples with the same name.<br>
 Offscreen is the odd one, it fakes the input and saves a png with no window open.
 </p>
 

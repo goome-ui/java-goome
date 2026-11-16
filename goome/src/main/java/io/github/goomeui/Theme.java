@@ -12,7 +12,8 @@ import java.util.WeakHashMap;
 public final class Theme {
     public static final int ICON_TINT = 0, ICON_AS_IS = 1;
     public static final int ALIGN_AUTO = 0, ALIGN_LEFT = 1, ALIGN_CENTER = 2, ALIGN_RIGHT = 3;
-    public static final int EASE_SMOOTH = 0, EASE_LINEAR = 1, EASE_OUT = 2, EASE_IN_OUT = 3, EASE_BACK = 4, EASE_CUSTOM = 5;
+    public static final int EASE_SMOOTH = 0, EASE_LINEAR = 1, EASE_OUT = 2, EASE_IN_OUT = 3, EASE_BACK = 4, EASE_CUSTOM = 5, EASE_IN = 6, EASE_SPRING = 7,
+        EASE_BOUNCE = 8;
     public static final int PRESET_DARK = 0, PRESET_LIGHT = 1, PRESET_MIDNIGHT = 2, PRESET_PAPER = 3, PRESET_MINT = 4, PRESET_HIGH_CONTRAST = 5,
         PRESET_ROSE = 6, PRESET_COUNT = 7;
     static final Set<String> FONTS = Set.of("font", "font_heading", "font_mono", "font_small");

@@ -1,5 +1,6 @@
 package io.github.goomeui.mc;
 
+import io.github.goomeui.A11yNode;
 import io.github.goomeui.Event;
 import io.github.goomeui.Goome;
 import io.github.goomeui.GoomeException;
@@ -8,6 +9,7 @@ import io.github.goomeui.PixelFormat;
 import io.github.goomeui.Rect;
 import io.github.goomeui.Ui;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.function.Consumer;
 
 public final class GoomeView implements AutoCloseable {
@@ -97,6 +99,22 @@ public final class GoomeView implements AutoCloseable {
             ui.feed(Event.key(k, mods, new String(Character.toChars(cp))));
         });
         return true;
+    }
+
+    public boolean commit(String s) {
+        if (!ui.wantsKeyboard() || s == null || s.isEmpty()) return false;
+        ui.feed(Event.typed(s));
+        return true;
+    }
+
+    public boolean preedit(String s, int caret) {
+        if (!ui.wantsKeyboard()) return false;
+        ui.feed(Event.preedit(s == null ? "" : s, caret));
+        return true;
+    }
+
+    public List<A11yNode> a11y() {
+        return ui.a11yTree();
     }
 
     public void focus(boolean gained) {
