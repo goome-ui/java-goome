@@ -112,23 +112,23 @@ Overlay is still the default, nothing changes unless you ask for an app or offsc
 <br>
 
 <p align="center">
-It's not on Maven Central. Grab <code>goome-0.4.0.jar</code> from the <a href="https://github.com/goome-ui/java-goome/releases">releases page</a> and drop it on your classpath, it has the native lib for every OS inside, both Macs too. The Fabric and NeoForge mod jars are on there as well.<br> <br>
+It's not on Maven Central. Grab <code>goome-0.5.0.jar</code> from the <a href="https://github.com/goome-ui/java-goome/releases">releases page</a> and drop it on your classpath, it has the native lib for every OS inside, both Macs too. The Fabric and NeoForge mod jars are on there as well.<br> <br>
 In Gradle put it in <code>libs/</code>:
 </p>
 
 ```sh
 mkdir -p libs
-curl -fsSL -o libs/goome-0.4.0.jar https://github.com/goome-ui/java-goome/releases/download/v0.4.0/goome-0.4.0.jar
+curl -fsSL -o libs/goome-0.5.0.jar https://github.com/goome-ui/java-goome/releases/download/v0.5.0/goome-0.5.0.jar
 ```
 
 ```groovy
 dependencies {
-    implementation files('libs/goome-0.4.0.jar')
+    implementation files('libs/goome-0.5.0.jar')
 }
 ```
 
 <p align="center">
-For another version swap <code>0.4.0</code> for it, every one is on the releases page.<br> <br>
+For another version swap <code>0.5.0</code> for it, every one is on the releases page.<br> <br>
 Building it yourself needs a C compiler and a JDK 25 for Gradle (the jar still runs on 17):
 </p>
 
@@ -136,7 +136,7 @@ Building it yourself needs a C compiler and a JDK 25 for Gradle (the jar still r
 git clone https://github.com/goome-ui/java-goome
 cd java-goome
 ./build.sh test      # builds build/natives/<os>/libgoome.so and runs the tests
-./gradlew :goome:jar # goome/build/libs/goome-0.4.0.jar
+./gradlew :goome:jar # goome/build/libs/goome-0.5.0.jar
 ```
 
 <p align="center">
@@ -174,8 +174,8 @@ Making your own: <code>minecraft/common</code> is the part that doesnt touch Min
 
 ```sh
 ./build.sh                                 # native lib for your os
-cd minecraft/fabric && ../../gradlew build # build/libs/goome-fabric-0.4.0.jar
-cd ../neoforge && ../../gradlew build      # build/libs/goome-neoforge-0.4.0.jar
+cd minecraft/fabric && ../../gradlew build # build/libs/goome-fabric-0.5.0.jar
+cd ../neoforge && ../../gradlew build      # build/libs/goome-neoforge-0.5.0.jar
 ```
 
 <p align="center">

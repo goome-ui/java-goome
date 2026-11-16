@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 
 public final class Goome implements AutoCloseable {
-    public static final String VERSION = "0.4.0";
+    public static final String VERSION = "0.5.0";
 
     public static final int AUTO = 0, WAYLAND = 1, GNOME = 2, PORTAL = 3, X11 = 4, WIN32 = 5, MACOS = 6, TEST = 7, OFFSCREEN = 8;
     public static final int MODE_OVERLAY = 0, MODE_WINDOW = 1, MODE_OFFSCREEN = 2;
