@@ -10,6 +10,7 @@
 
 <p align="center">
   <img src="https://goome-ui.github.io/docs/assets/badges/java-17.svg" alt="Java 17+">
+  <a href="https://central.sonatype.com/artifact/io.github.goome-ui/goome"><img src="https://goome-ui.github.io/docs/assets/badges/maven-central.svg" alt="Maven Central"></a>
   <img src="https://goome-ui.github.io/docs/assets/badges/no-jni-glue.svg" alt="FFM + LWJGL">
   <img src="https://img.shields.io/badge/Linux-X11%20%2B%20Wayland-1b1d22?style=flat-square&logo=linux&logoColor=white" alt="Linux">
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-1b1d22?style=flat-square&logo=windows11&logoColor=white" alt="Windows">
@@ -112,23 +113,37 @@ Overlay is still the default, nothing changes unless you ask for an app or offsc
 <br>
 
 <p align="center">
-It's not on Maven Central. Grab <code>goome-0.5.0.jar</code> from the <a href="https://github.com/goome-ui/java-goome/releases">releases page</a> and drop it on your classpath, it has the native lib for every OS inside, both Macs too. The Fabric and NeoForge mod jars are on there as well.<br> <br>
-In Gradle put it in <code>libs/</code>:
+Its on <a href="https://central.sonatype.com/artifact/io.github.goome-ui/goome">Maven Central</a>, and the jar has the native lib for every OS inside, both Macs too. Gradle:
 </p>
 
-```sh
-mkdir -p libs
-curl -fsSL -o libs/goome-0.5.0.jar https://github.com/goome-ui/java-goome/releases/download/v0.5.0/goome-0.5.0.jar
-```
-
 ```groovy
+repositories {
+    mavenCentral()
+}
+
 dependencies {
-    implementation files('libs/goome-0.5.0.jar')
+    implementation 'io.github.goome-ui:goome:0.5.0'
 }
 ```
 
 <p align="center">
-For another version swap <code>0.5.0</code> for it, every one is on the releases page.<br> <br>
+Maven:
+</p>
+
+```xml
+<dependency>
+    <groupId>io.github.goome-ui</groupId>
+    <artifactId>goome</artifactId>
+    <version>0.5.0</version>
+</dependency>
+```
+
+<p align="center">
+No build tool? Grab <code>goome-0.5.0.jar</code> from the <a href="https://github.com/goome-ui/java-goome/releases">releases page</a> and drop it on your classpath. The Fabric and NeoForge mod jars are on there as well.
+</p>
+
+<p align="center">
+For another version swap <code>0.5.0</code> for it. Maven Central has 0.4.0 and up, every one is on the releases page.<br> <br>
 Building it yourself needs a C compiler and a JDK 25 for Gradle (the jar still runs on 17):
 </p>
 
@@ -136,7 +151,7 @@ Building it yourself needs a C compiler and a JDK 25 for Gradle (the jar still r
 git clone https://github.com/goome-ui/java-goome
 cd java-goome
 ./build.sh test      # builds build/natives/<os>/libgoome.so and runs the tests
-./gradlew :goome:jar # goome/build/libs/goome-0.5.0.jar
+./gradlew :goome:jar # goome/build/libs/goome-<version>.jar
 ```
 
 <p align="center">
@@ -174,8 +189,8 @@ Making your own: <code>minecraft/common</code> is the part that doesnt touch Min
 
 ```sh
 ./build.sh                                 # native lib for your os
-cd minecraft/fabric && ../../gradlew build # build/libs/goome-fabric-0.5.0.jar
-cd ../neoforge && ../../gradlew build      # build/libs/goome-neoforge-0.5.0.jar
+cd minecraft/fabric && ../../gradlew build # build/libs/goome-fabric-0.5.1.jar
+cd ../neoforge && ../../gradlew build      # build/libs/goome-neoforge-0.5.1.jar
 ```
 
 <p align="center">
