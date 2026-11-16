@@ -5,13 +5,13 @@ import static io.github.goomeui.Native.N;
 import java.nio.charset.StandardCharsets;
 
 public final class Event {
-    private static final String[] NAMES = {"none", "down", "up", "motion", "scroll", "key", "hotkey", "control", "monitors", "quit", "close", "focus", "drop"};
+    private static final String[] NAMES = {"none", "down", "up", "motion", "scroll", "key", "hotkey", "control", "monitors", "quit", "close", "focus", "drop", "text", "preedit"};
     private static final Layout L = Layout.EVENT;
 
     int type;
     double x, y;
     int mon, button, dy, key, mods, id;
-    String text = "", msg = "", path;
+    String text = "", msg = "", path, full;
 
     Event(int type) {
         this.type = type;
@@ -44,6 +44,18 @@ public final class Event {
         e.key = key;
         e.mods = mods;
         e.text = text == null ? "" : text;
+        return e;
+    }
+
+    public static Event typed(String text) {
+        Event e = new Event(Goome.TEXT).msg(text);
+        e.full = e.msg;
+        return e;
+    }
+
+    public static Event preedit(String text, int caret) {
+        Event e = new Event(Goome.PREEDIT).msg(text).id(caret);
+        e.full = e.msg;
         return e;
     }
 
@@ -130,6 +142,15 @@ public final class Event {
         return msg;
     }
 
+    public String fullText() {
+        if (type != Goome.TEXT && type != Goome.PREEDIT) return null;
+        return full != null ? full : msg;
+    }
+
+    public int caret() {
+        return type == Goome.PREEDIT ? id : 0;
+    }
+
     public String path() {
         return path != null ? path : type == Goome.DROP ? msg : null;
     }
@@ -184,6 +205,8 @@ public final class Event {
             case Goome.HOTKEY: more = " id " + id; break;
             case Goome.CONTROL: more = " '" + msg + "'"; break;
             case Goome.FOCUS: more = id != 0 ? " gained" : " lost"; break;
+            case Goome.TEXT: more = " '" + fullText() + "'"; break;
+            case Goome.PREEDIT: more = " '" + fullText() + "' caret " + id; break;
             case Goome.DROP: more = String.format(" %.0f,%.0f '%s'", x, y, path()); break;
             default: more = "";
         }

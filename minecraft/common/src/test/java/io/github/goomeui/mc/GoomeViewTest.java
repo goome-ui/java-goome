@@ -2,6 +2,7 @@ package io.github.goomeui.mc;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import io.github.goomeui.A11yNode;
 import io.github.goomeui.Goome;
 import io.github.goomeui.Image;
 import io.github.goomeui.Rect;
@@ -134,6 +135,17 @@ class GoomeViewTest {
             v.frame(body);
             assertEquals("h!pasted", text[0]);
             assertNull(v.copied());
+            assertTrue(v.preedit("\u306b", 3));
+            v.frame(body);
+            assertEquals("h!pasted", text[0]);
+            assertTrue(v.preedit("", 0));
+            assertTrue(v.commit("\u65e5\u672c"));
+            v.frame(body);
+            assertEquals("h!pasted\u65e5\u672c", text[0]);
+            assertTrue(v.a11y().isEmpty());
+            v.ui().a11y(true);
+            v.frame(body);
+            assertTrue(v.a11y().stream().anyMatch(n -> n.role() == A11yNode.ROLE_INPUT && n.label().equals("Text") && n.value().equals(text[0])));
         }
     }
 

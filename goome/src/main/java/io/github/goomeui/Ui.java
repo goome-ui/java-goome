@@ -138,6 +138,76 @@ public final class Ui implements AutoCloseable {
         return Native.i(Fn.UI_ANIMATING, h()) != 0;
     }
 
+    public static double ease(int ease, double t) {
+        return Native.d(Fn.EASE, ease, b(t));
+    }
+
+    public double anim(String id, double target, double ms, int ease) {
+        try (Scratch s = Scratch.push()) {
+            return Native.d(Fn.UI_ANIM, h(), s.str(id), b(target), b(ms), ease);
+        }
+    }
+
+    public double anim(String id, boolean on, double ms, int ease) {
+        return anim(id, on ? 1 : 0, ms, ease);
+    }
+
+    public int animColor(String id, int target, double ms, int ease) {
+        try (Scratch s = Scratch.push()) {
+            return Native.i(Fn.UI_ANIM_COLOR, h(), s.str(id), target, b(ms), ease);
+        }
+    }
+
+    public void a11y(boolean on) {
+        Native.call(Fn.UI_A11Y, h(), b(on));
+    }
+
+    public void a11yRole(int role, String label) {
+        try (Scratch s = Scratch.push()) {
+            Native.call(Fn.UI_A11Y_ROLE, h(), role, s.str(label));
+        }
+    }
+
+    public void a11yValue(String value) {
+        try (Scratch s = Scratch.push()) {
+            Native.call(Fn.UI_A11Y_VALUE, h(), s.str(value));
+        }
+    }
+
+    public List<A11yNode> a11yTree() {
+        int n = Native.i(Fn.A11Y_TREE, h(), 0, 0);
+        List<A11yNode> out = new ArrayList<>(n);
+        if (n <= 0) return out;
+        int size = Layout.A11Y_NODE.size;
+        try (Scratch s = Scratch.push()) {
+            long arr = s.alloc((long) size * n);
+            int got = Math.min(n, Native.i(Fn.A11Y_TREE, h(), arr, n));
+            for (int k = 0; k < got; k++) out.add(A11yNode.read(arr + (long) k * size));
+        }
+        return out;
+    }
+
+    public void a11yAct(String action, A11yNode node, String text) {
+        String msg = "a11y " + action + " " + node.id() + (text != null ? " " + text : "");
+        g.push(Event.of(Goome.CONTROL).msg(msg));
+    }
+
+    public void a11yPress(A11yNode node) {
+        a11yAct("press", node, null);
+    }
+
+    public void a11ySet(A11yNode node, String value) {
+        a11yAct("set", node, value);
+    }
+
+    public void a11yExpand(A11yNode node) {
+        a11yAct("expand", node, null);
+    }
+
+    public void a11yFocus(A11yNode node) {
+        a11yAct("focus", node, null);
+    }
+
     public int wants() {
         return Native.i(Fn.UI_WANTS, h());
     }

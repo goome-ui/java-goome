@@ -3,8 +3,14 @@ package io.github.goomeui;
 import static io.github.goomeui.Native.N;
 import static io.github.goomeui.Native.b;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class Font implements AutoCloseable {
+    public static final int DIR_AUTO = 0, DIR_LTR = 1, DIR_RTL = 2;
+
     private long f;
+    private final List<Font> fallbacks = new ArrayList<>();
     private long keep;
     private final boolean owned;
 
@@ -96,6 +102,22 @@ public final class Font implements AutoCloseable {
         return Native.d(Fn.TEXT_LINE_HEIGHT, handle(font), b(size));
     }
 
+    public Font fallback(Font other) {
+        if (other == null) throw new IllegalArgumentException("fallback needs a font");
+        Native.call(Fn.FONT_FALLBACK, handle(), other.handle());
+        if (other != this && !fallbacks.contains(other)) fallbacks.add(other);
+        return this;
+    }
+
+    public List<Font> fallbacks() {
+        return List.copyOf(fallbacks);
+    }
+
+    public static void textDir(int dir) {
+        if (dir < DIR_AUTO || dir > DIR_RTL) throw new IllegalArgumentException("text direction is DIR_AUTO, DIR_LTR or DIR_RTL, not " + dir);
+        Native.call(Fn.TEXT_DIR, dir);
+    }
+
     public static void setBuiltin(int font) {
         Native.call(Fn.SET_FONT, font);
     }
@@ -113,6 +135,7 @@ public final class Font implements AutoCloseable {
         if (owned) Native.call(Fn.FONT_FREE, h);
         if (keep != 0) N.free(keep);
         keep = 0;
+        fallbacks.clear();
     }
 
     @Override

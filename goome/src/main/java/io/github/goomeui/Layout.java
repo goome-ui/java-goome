@@ -114,4 +114,6 @@ final class Layout {
         .i("tip_delay_ms", "dbl_click_ms", "dbl_click_px", "drag_px", "repeat_delay_ms", "repeat_ms", "blink_ms", "menu_delay_ms", "toast_ms")
         .d("scroll_lines").i("raise_on_click", "esc_closes", "tab_nav", "focus_on_mouse").ints("cursor", Config.CUR_COUNT)
         .ints("keys", 2 * 4 * Config.ACT_COUNT).p("ease", "ease_user", "mask").done();
+    static final Layout A11Y_NODE = new Layout("goome_a11y_node").i("role", "parent", "states").d("x", "y", "w", "h").bytes("label", 96)
+        .bytes("value", 64).i("id").d("num", "min", "max").i("caret").done();
 }

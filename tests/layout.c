@@ -4,6 +4,7 @@
 #include "goome.h"
 
 #define S(t) printf("%s %d\n", #t, (int)sizeof(t))
+#define E(n) printf("%s %d\n", #n, (int)(n))
 #define F(t, f) printf("%s.%s %d %d\n", #t, #f, (int)offsetof(t, f), (int)sizeof(((t *)0)->f))
 
 int main(void)
@@ -75,5 +76,17 @@ int main(void)
     F(goome_ui_config, toast_ms); F(goome_ui_config, scroll_lines); F(goome_ui_config, raise_on_click); F(goome_ui_config, esc_closes);
     F(goome_ui_config, tab_nav); F(goome_ui_config, focus_on_mouse); F(goome_ui_config, cursor); F(goome_ui_config, keys);
     F(goome_ui_config, ease); F(goome_ui_config, ease_user); F(goome_ui_config, mask);
+    S(goome_a11y_node);
+    F(goome_a11y_node, role); F(goome_a11y_node, parent); F(goome_a11y_node, states); F(goome_a11y_node, x); F(goome_a11y_node, y);
+    F(goome_a11y_node, w); F(goome_a11y_node, h); F(goome_a11y_node, label); F(goome_a11y_node, value); F(goome_a11y_node, id);
+    F(goome_a11y_node, num); F(goome_a11y_node, min); F(goome_a11y_node, max); F(goome_a11y_node, caret);
+    E(GOOME_TEXT); E(GOOME_PREEDIT); E(GOOME_DIR_AUTO); E(GOOME_DIR_LTR); E(GOOME_DIR_RTL);
+    E(GOOME_EASE_SMOOTH); E(GOOME_EASE_LINEAR); E(GOOME_EASE_OUT); E(GOOME_EASE_IN_OUT); E(GOOME_EASE_BACK); E(GOOME_EASE_CUSTOM);
+    E(GOOME_EASE_IN); E(GOOME_EASE_SPRING); E(GOOME_EASE_BOUNCE);
+    E(GOOME_ROLE_NONE); E(GOOME_ROLE_WINDOW); E(GOOME_ROLE_BUTTON); E(GOOME_ROLE_CHECKBOX); E(GOOME_ROLE_RADIO); E(GOOME_ROLE_SLIDER);
+    E(GOOME_ROLE_TEXT); E(GOOME_ROLE_INPUT); E(GOOME_ROLE_COMBO); E(GOOME_ROLE_LIST); E(GOOME_ROLE_ITEM); E(GOOME_ROLE_TAB);
+    E(GOOME_ROLE_MENU); E(GOOME_ROLE_MENUITEM); E(GOOME_ROLE_TABLE); E(GOOME_ROLE_TREE); E(GOOME_ROLE_PROGRESS); E(GOOME_ROLE_IMAGE);
+    E(GOOME_ROLE_GROUP); E(GOOME_ROLE_DIALOG);
+    E(GOOME_A11Y_FOCUSED); E(GOOME_A11Y_CHECKED); E(GOOME_A11Y_DISABLED); E(GOOME_A11Y_EXPANDED); E(GOOME_A11Y_SELECTED);
     return 0;
 }
