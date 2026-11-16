@@ -168,7 +168,6 @@ public final class Anim {
                     u.sameLine();
                     a.bell(u);
                     u.statusbar(u.animating() ? "moving" : "still");
-                    u.appEnd();
                 } finally {
                     u.end();
                 }

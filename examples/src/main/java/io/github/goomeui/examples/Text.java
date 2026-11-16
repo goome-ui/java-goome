@@ -41,7 +41,7 @@ public final class Text {
             return;
         }
         try (g; Ui u = g.ui(); TextBuffer notes = new TextBuffer(1024,
-            "שלום! this line starts in hebrew\nmixed: abc ערבי 42 👍🏽\nمرحبا بكم")) {
+            "שלום! this line starts in hebrew\nmixed: abc عربي 42 👍🏽\nمرحبا بكم")) {
             if (shot != null) {
                 u.theme().animMs(0);
                 u.config().blinkMs(0);
