@@ -74,6 +74,6 @@ jobs:
           unzip -l central.zip
           auth=$(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 -w0)
           curl -fsS -X POST -H "Authorization: Bearer $auth" -F "bundle=@central.zip" \
-            "https://central.sonatype.com/api/v1/publisher/upload?name=goome-$v&publishingType=USER_MANAGED"
+            "https://central.sonatype.com/api/v1/publisher/upload?name=goome-$v&publishingType=AUTOMATIC"
           echo
-          echo "uploaded, press Publish on central.sonatype.com/publishing/deployments"
+          echo "uploaded, central publishes it once it validates"
