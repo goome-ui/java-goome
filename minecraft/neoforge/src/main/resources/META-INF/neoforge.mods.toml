@@ -9,7 +9,7 @@ version = "${version}"
 displayName = "goome"
 authors = "sevvy-wevvy"
 description = "goome ui inside minecraft, a menu screen and a hud drawn by goome"
-displayURL = "https://goome-ui.github.io/docs/"
+displayURL = "https://goome.wtf/docs/"
 
 [[dependencies.goome]]
 modId = "neoforge"

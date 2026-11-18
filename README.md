@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <img src="https://goome-ui.github.io/docs/assets/badges/java-17.svg" alt="Java 17+">
-  <a href="https://central.sonatype.com/artifact/io.github.goome-ui/goome"><img src="https://goome-ui.github.io/docs/assets/badges/maven-central.svg" alt="Maven Central"></a>
-  <img src="https://goome-ui.github.io/docs/assets/badges/no-jni-glue.svg" alt="FFM + LWJGL">
+  <img src="https://goome.wtf/badges/java-17.svg" alt="Java 17+">
+  <a href="https://central.sonatype.com/artifact/io.github.goome-ui/goome"><img src="https://goome.wtf/badges/maven-central.svg" alt="Maven Central"></a>
+  <img src="https://goome.wtf/badges/no-jni-glue.svg" alt="FFM + LWJGL">
   <img src="https://img.shields.io/badge/Linux-X11%20%2B%20Wayland-1b1d22?style=flat-square&logo=linux&logoColor=white" alt="Linux">
   <img src="https://img.shields.io/badge/Windows-10%20%2F%2011-1b1d22?style=flat-square&logo=windows11&logoColor=white" alt="Windows">
   <img src="https://img.shields.io/badge/macOS-14%2B-1b1d22?style=flat-square&logo=apple&logoColor=white" alt="macOS">
@@ -26,8 +26,8 @@
 </p>
 
 <p align="center">
-  <a href="https://goome-ui.github.io/docs/">Docs</a> &nbsp;·&nbsp;
-  <a href="https://goome-ui.github.io/docs/builder/">UI Builder</a> &nbsp;·&nbsp;
+  <a href="https://goome.wtf/docs/">Docs</a> &nbsp;·&nbsp;
+  <a href="https://goome.wtf/builder/">UI Builder</a> &nbsp;·&nbsp;
   <a href="https://github.com/goome-ui/examples">Examples</a> &nbsp;·&nbsp;
   <a href="https://github.com/goome-ui/c-goome">C</a> &nbsp;·&nbsp;
   <a href="https://github.com/goome-ui/csharp-goome">C# + Unity</a> &nbsp;·&nbsp;
@@ -36,7 +36,7 @@
 </p>
 
 <p align="center">
-  To see what goome can do, grab one of the <a href="https://goome-ui.github.io/docs/downloads/">ready made apps</a>, like the HUD or the crosshair. To start your own, <code>goome new my-app --lang java</code> from <a href="https://github.com/goome-ui/goome-cli">goome-cli</a> makes it from a <a href="https://goome-ui.github.io/docs/templates/">template</a>.<br>
+  To see what goome can do, grab one of the <a href="https://goome.wtf/docs/downloads/">ready made apps</a>, like the HUD or the crosshair. To start your own, <code>goome new my-app --lang java</code> from <a href="https://github.com/goome-ui/goome-cli">goome-cli</a> makes it from a <a href="https://goome.wtf/docs/templates/">template</a>.<br>
   Questions go in <a href="https://github.com/goome-ui/c-goome/discussions">Discussions</a>. If you want to help, the <a href="https://github.com/goome-ui/java-goome/labels/good%20first%20issue">good first issues</a> are small ones to start with.
 </p>
 
@@ -276,7 +276,7 @@ try (var s = ui.style().accent(0xFFFF6FA8).radius(0).push()) {
 ```
 
 <p align="center">
-The <a href="https://goome-ui.github.io/docs/">docs</a> cover the rest, from your own widgets with <code>ui.custom</code> to png icons and skins and the key map in <code>ui.config()</code>. <code>./gradlew :examples:runAnything</code> and <code>runCustom</code> show it off.
+The <a href="https://goome.wtf/docs/">docs</a> cover the rest, from your own widgets with <code>ui.custom</code> to png icons and skins and the key map in <code>ui.config()</code>. <code>./gradlew :examples:runAnything</code> and <code>runCustom</code> show it off.
 </p>
 </details>
 
@@ -364,7 +364,7 @@ Offscreen is the odd one, it fakes the input and saves a png with no window open
 ```
 
 <p align="center">
-Bigger projects are in <a href="https://github.com/goome-ui/examples">goome-ui/examples</a>, like hosts for raylib, SDL, LÖVE, plus native mods. The <a href="https://goome-ui.github.io/docs/">docs</a> have every function, with the C, C#, Python and Godot versions next to it.
+Bigger projects are in <a href="https://github.com/goome-ui/examples">goome-ui/examples</a>, like hosts for raylib, SDL, LÖVE, plus native mods. The <a href="https://goome.wtf/docs/">docs</a> have every function, with the C, C#, Python and Godot versions next to it.
 </p>
 </details>
 
