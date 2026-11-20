@@ -122,7 +122,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'io.github.goome-ui:goome:0.5.3'
+    implementation 'io.github.goome-ui:goome:0.5.5'
 }
 ```
 
@@ -134,16 +134,16 @@ Maven:
 <dependency>
     <groupId>io.github.goome-ui</groupId>
     <artifactId>goome</artifactId>
-    <version>0.5.3</version>
+    <version>0.5.5</version>
 </dependency>
 ```
 
 <p align="center">
-No build tool? Grab <code>goome-0.5.3.jar</code> from the <a href="https://github.com/goome-ui/java-goome/releases">releases page</a> and drop it on your classpath. The Fabric and NeoForge mod jars are on there as well.
+No build tool? Grab <code>goome-0.5.5.jar</code> from the <a href="https://github.com/goome-ui/java-goome/releases">releases page</a> and drop it on your classpath. The Fabric and NeoForge mod jars are on there as well.
 </p>
 
 <p align="center">
-For another version swap <code>0.5.3</code> for it. Maven Central has 0.4.0 and up, every one is on the releases page.<br> <br>
+For another version swap <code>0.5.5</code> for it. Maven Central has 0.4.0 and up, every one is on the releases page.<br> <br>
 Building it yourself needs a C compiler and a JDK 25 for Gradle (the jar still runs on 17):
 </p>
 
@@ -189,8 +189,8 @@ Making your own: <code>minecraft/common</code> is the part that doesnt touch Min
 
 ```sh
 ./build.sh                                 # native lib for your os
-cd minecraft/fabric && ../../gradlew build # build/libs/goome-fabric-0.5.3.jar
-cd ../neoforge && ../../gradlew build      # build/libs/goome-neoforge-0.5.3.jar
+cd minecraft/fabric && ../../gradlew build # build/libs/goome-fabric-0.5.5.jar
+cd ../neoforge && ../../gradlew build      # build/libs/goome-neoforge-0.5.5.jar
 ```
 
 <p align="center">
