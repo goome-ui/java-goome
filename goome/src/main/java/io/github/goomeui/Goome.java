@@ -15,7 +15,7 @@ public final class Goome implements AutoCloseable {
 
     public static final int AUTO = 0, WAYLAND = 1, GNOME = 2, PORTAL = 3, X11 = 4, WIN32 = 5, MACOS = 6, TEST = 7, OFFSCREEN = 8;
     public static final int MODE_OVERLAY = 0, MODE_WINDOW = 1, MODE_OFFSCREEN = 2;
-    public static final int WINDOW_RESIZABLE = 1, WINDOW_BORDERLESS = 2, WINDOW_TRANSPARENT = 4, WINDOW_ON_TOP = 8, WINDOW_HIDDEN = 16, WINDOW_CENTER = 32, WINDOW_NO_TITLEBAR = 64;
+    public static final int WINDOW_RESIZABLE = 1, WINDOW_BORDERLESS = 2, WINDOW_TRANSPARENT = 4, WINDOW_ON_TOP = 8, WINDOW_HIDDEN = 16, WINDOW_CENTER = 32, WINDOW_NO_TITLEBAR = 64, WINDOW_NO_CONSOLE = 128;
 
     public static final int OK = 0, ENOTSUP = -1, EDENIED = -2, ENODISPLAY = -3, EGONE = -4, EAGAIN = -5, ENOMEM = -6, EARG = -7;
 
