@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public final class Goome implements AutoCloseable {
     /** The goome version these bindings were built for. */
-    public static final String VERSION = "0.5.5";
+    public static final String VERSION = "0.5.6";
 
     /** Backend ids for Options.backend. AUTO picks the best one for the system, the others force one. */
     public static final int AUTO = 0, WAYLAND = 1, GNOME = 2, PORTAL = 3, X11 = 4, WIN32 = 5, MACOS = 6, TEST = 7, OFFSCREEN = 8;
