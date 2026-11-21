@@ -2,6 +2,11 @@ package io.github.goomeui;
 
 import static io.github.goomeui.Native.N;
 
+/**
+ * What the mouse and keyboard did to a Ui.custom() widget this frame. x, y, w and h is where it ended up,
+ * mx and my the pointer, dx and dy the move while held, dragX and dragY the move since the press, key the
+ * key pressed while focused with modifier bits or-ed in (0 for none). All logical px.
+ */
 public record Item(double x, double y, double w, double h,
     boolean hovered, boolean pressed, boolean held, boolean released, boolean clicked, boolean doubleClicked, boolean rightClicked, boolean focused,
     double mx, double my, double dx, double dy, double dragX, double dragY, int key) {
