@@ -2,9 +2,12 @@ package io.github.goomeui;
 
 import static io.github.goomeui.Native.N;
 
+/** A rectangle with int fields. */
 public final class Rect {
+    /** Position and size. */
     public final int x, y, w, h;
 
+    /** Makes a rect. */
     public Rect(int x, int y, int w, int h) {
         this.x = x;
         this.y = y;
@@ -12,18 +15,22 @@ public final class Rect {
         this.h = h;
     }
 
+    /** Makes a rect from doubles, the values are cut to whole numbers. */
     public static Rect of(double x, double y, double w, double h) {
         return new Rect((int) x, (int) y, (int) w, (int) h);
     }
 
+    /** True if it has no area. */
     public boolean empty() {
         return w <= 0 || h <= 0;
     }
 
+    /** True if the point is inside. */
     public boolean contains(double px, double py) {
         return px >= x && py >= y && px < x + w && py < y + h;
     }
 
+    /** The smallest rect that covers both. */
     public Rect union(Rect o) {
         if (o == null || o.empty()) return this;
         if (empty()) return o;

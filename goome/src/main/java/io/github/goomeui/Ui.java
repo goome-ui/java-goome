@@ -11,13 +11,29 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+/**
+ * The immediate mode ui kit. Call begin(), run your widgets every frame, then end(). Widgets that hold a
+ * value take it and return the new one, changed() says if the last widget changed it.
+ */
 public final class Ui implements AutoCloseable {
+    /**
+     * Flags for window(), or them together. Move by the title, resize from the corner, collapse from the
+     * title, no title bar, close button.
+     */
     public static final int WIN_MOVE = 1, WIN_RESIZE = 2, WIN_COLLAPSE = 4, WIN_NO_TITLE = 8, WIN_CLOSE = 16;
+    /** Flags for app(): title bar, menu bar, status bar, or no padding. */
     public static final int APP_TITLEBAR = 1, APP_MENUBAR = 2, APP_STATUSBAR = 4, APP_NO_PAD = 8;
+    /** Flags for textEdit(): read only, line numbers, wrapping, monospace font. */
     public static final int EDIT_READONLY = 1, EDIT_LINE_NUMBERS = 2, EDIT_WRAP = 4, EDIT_MONO = 8;
+    /** Flags for tableBegin(): sortable columns, resizable columns, striped rows, borders. */
     public static final int TABLE_SORTABLE = 1, TABLE_RESIZABLE = 2, TABLE_STRIPES = 4, TABLE_BORDERS = 8;
+    /** Skin slots for pushSkin() and Theme.skin(int, Skin). SKIN_COUNT is how many there are. */
     public static final int SKIN_BUTTON = 0, SKIN_PANEL = 1, SKIN_INPUT = 2, SKIN_CHECKBOX = 3, SKIN_RADIO = 4, SKIN_TOGGLE = 5, SKIN_SLIDER_TRACK = 6,
         SKIN_SLIDER_FILL = 7, SKIN_SCROLLBAR = 8, SKIN_TAB = 9, SKIN_TITLEBAR = 10, SKIN_TOOLTIP = 11, SKIN_MENU = 12, SKIN_POPUP = 13, SKIN_COUNT = 14;
+    /**
+     * Flags for inputEx(): password (draws the mask per letter, copy and cut do nothing), read only,
+     * numbers only, dont select all on focus, and enter makes entered() true.
+     */
     public static final int INPUT_PASSWORD = 1, INPUT_READONLY = 2, INPUT_NUMBER = 4, INPUT_NO_SELECT_ON_FOCUS = 8, INPUT_ENTER_RETURNS = 16;
 
     private final Goome g;
@@ -44,26 +60,32 @@ public final class Ui implements AutoCloseable {
         return u;
     }
 
+    /** The Goome this ui belongs to. */
     public Goome goome() {
         return g;
     }
 
+    /** The theme the ui draws with. Change a field and the next frame uses it. */
     public Theme theme() {
         return theme;
     }
 
+    /** Timings, key map and other behavior that isnt a look. */
     public Config config() {
         return config;
     }
 
+    /** Multiplies the sizes in the theme by s. */
     public void scale(double s) {
         Native.call(Fn.UI_SCALE, h(), b(s));
     }
 
+    /** True once close() ran. */
     public boolean closed() {
         return u == 0;
     }
 
+    /** Frees the ui. Closing the Goome does this for you. */
     @Override
     public void close() {
         if (u == 0) return;
@@ -77,10 +99,12 @@ public final class Ui implements AutoCloseable {
         Native.call(Fn.UI_FREE, h);
     }
 
+    /** True if the last widget changed its value or was clicked. */
     public boolean changed() {
         return changed;
     }
 
+    /** True if the last inputEx() was confirmed with enter, needs INPUT_ENTER_RETURNS. */
     public boolean entered() {
         return entered;
     }
@@ -90,6 +114,7 @@ public final class Ui implements AutoCloseable {
         return changed;
     }
 
+    /** Gives the ui an event. Returns true if it used it. */
     public boolean feed(Event e) {
         try (Scratch s = Scratch.push()) {
             long p = s.alloc(Layout.EVENT.size);
@@ -98,6 +123,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** Starts a ui frame on a monitor. Returns null when there is nothing to draw on, skip the frame then. */
     public Canvas begin(int mon) {
         long p = Native.call(Fn.UI_BEGIN, h(), mon);
         g.began++;
@@ -106,6 +132,7 @@ public final class Ui implements AutoCloseable {
         return canvas;
     }
 
+    /** Finishes the frame and sends it, with every widgets hit area. */
     public void end() {
         Native.call(Fn.UI_END, h());
         g.ended++;
@@ -120,6 +147,7 @@ public final class Ui implements AutoCloseable {
         kept.clear();
     }
 
+    /** begin, body, end in one go. Skips the frame if begin gave nothing. */
     public void frame(int mon, Consumer<Canvas> body) {
         Canvas c = begin(mon);
         if (c == null) return;
@@ -130,50 +158,60 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** Adds a rect that catches the mouse in overlay mode, for things you drew yourself. */
     public void hit(double x, double y, double w, double h) {
         Native.call(Fn.UI_HIT, h(), b(x), b(y), b(w), b(h));
     }
 
+    /** True while something still moves, draw again soon. */
     public boolean animating() {
         return Native.i(Fn.UI_ANIMATING, h()) != 0;
     }
 
+    /** Runs t (0 to 1) through one of the Theme EASE_ curves. */
     public static double ease(int ease, double t) {
         return Native.d(Fn.EASE, ease, b(t));
     }
 
+    /** Eases a number toward target over ms. The value is kept per id between frames, call it every frame. */
     public double anim(String id, double target, double ms, int ease) {
         try (Scratch s = Scratch.push()) {
             return Native.d(Fn.UI_ANIM, h(), s.str(id), b(target), b(ms), ease);
         }
     }
 
+    /** Same as anim with a target of 1 for on and 0 for off. */
     public double anim(String id, boolean on, double ms, int ease) {
         return anim(id, on ? 1 : 0, ms, ease);
     }
 
+    /** Eases an argb color toward target, kept per id like anim. */
     public int animColor(String id, int target, double ms, int ease) {
         try (Scratch s = Scratch.push()) {
             return Native.i(Fn.UI_ANIM_COLOR, h(), s.str(id), target, b(ms), ease);
         }
     }
 
+    /** Turns on the accessibility tree. */
     public void a11y(boolean on) {
         Native.call(Fn.UI_A11Y, h(), b(on));
     }
 
+    /** Sets the role and label of the next widget, one of the A11yNode ROLE_ numbers. */
     public void a11yRole(int role, String label) {
         try (Scratch s = Scratch.push()) {
             Native.call(Fn.UI_A11Y_ROLE, h(), role, s.str(label));
         }
     }
 
+    /** Sets the accessibility value of the next widget. */
     public void a11yValue(String value) {
         try (Scratch s = Scratch.push()) {
             Native.call(Fn.UI_A11Y_VALUE, h(), s.str(value));
         }
     }
 
+    /** The accessibility tree of the last frame, empty unless a11y is on. */
     public List<A11yNode> a11yTree() {
         int n = Native.i(Fn.A11Y_TREE, h(), 0, 0);
         List<A11yNode> out = new ArrayList<>(n);
@@ -187,48 +225,59 @@ public final class Ui implements AutoCloseable {
         return out;
     }
 
+    /** Sends an accessibility action (press, set, expand or focus) for a node. It goes in as a CONTROL event. */
     public void a11yAct(String action, A11yNode node, String text) {
         String msg = "a11y " + action + " " + node.id() + (text != null ? " " + text : "");
         g.push(Event.of(Goome.CONTROL).msg(msg));
     }
 
+    /** Presses the node like a click. */
     public void a11yPress(A11yNode node) {
         a11yAct("press", node, null);
     }
 
+    /** Sets the value of the node. */
     public void a11ySet(A11yNode node, String value) {
         a11yAct("set", node, value);
     }
 
+    /** Expands the node. */
     public void a11yExpand(A11yNode node) {
         a11yAct("expand", node, null);
     }
 
+    /** Focuses the node. */
     public void a11yFocus(A11yNode node) {
         a11yAct("focus", node, null);
     }
 
+    /** What the ui wants right now as Goome WANT_ bits. Good after feed() and end(). */
     public int wants() {
         return Native.i(Fn.UI_WANTS, h());
     }
 
+    /** True if the ui wants the mouse. */
     public boolean wantsMouse() {
         return (wants() & Goome.WANT_MOUSE) != 0;
     }
 
+    /** True if the ui wants the keyboard. */
     public boolean wantsKeyboard() {
         return (wants() & Goome.WANT_KEYBOARD) != 0;
     }
 
+    /** What the ui takes from the os by itself, WANT_ bits. */
     public int autoGrab() {
         return autoGrab;
     }
 
+    /** Sets what the ui takes from the os by itself. Default is both, 0 means the app does it. */
     public void autoGrab(int wants) {
         Native.call(Fn.UI_AUTO_GRAB, h(), wants);
         autoGrab = wants;
     }
 
+    /** Starts a floating window. Returns true if it is open and not collapsed, then call windowEnd() either way. */
     public boolean window(String title, Window win, int flags) {
         long p = win.x0();
         try (Scratch s = Scratch.push()) {
@@ -236,6 +285,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A window that runs body when it is open and calls windowEnd() for you. */
     public void window(String title, Window win, int flags, Runnable body) {
         try {
             if (window(title, win, flags)) body.run();
@@ -244,36 +294,44 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** Ends a window(). */
     public void windowEnd() {
         Native.call(Fn.UI_WINDOW_END, h());
     }
 
+    /** Lays the next widgets out in this many equal columns. */
     public void row(int cols) {
         Native.call(Fn.UI_ROW, h(), cols);
     }
 
+    /** Puts the next widget on the same line. */
     public void sameLine() {
         Native.call(Fn.UI_SAME_LINE, h());
     }
 
+    /** Adds empty space. */
     public void space(double px) {
         Native.call(Fn.UI_SPACE, h(), b(px));
     }
 
+    /** Draws a thin line. */
     public void separator() {
         Native.call(Fn.UI_SEPARATOR, h());
     }
 
+    /** Width of the next widget, 0 fills. */
     public void width(double w) {
         Native.call(Fn.UI_WIDTH, h(), b(w));
     }
 
+    /** Plain text. */
     public void label(String text) {
         try (Scratch s = Scratch.push()) {
             Native.call(Fn.UI_LABEL, h(), s.str("%s"), s.str(text));
         }
     }
 
+    /** Text through String.format. */
     public void label(String fmt, Object... args) {
         label(String.format(fmt, args));
     }
@@ -290,24 +348,29 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** Bigger text. */
     public void heading(String text) {
         text(Fn.UI_HEADING, text);
     }
 
+    /** Text that wraps at the edge of the window. */
     public void wrapped(String text) {
         text(Fn.UI_WRAPPED, text);
     }
 
+    /** A button. Returns true on the frame it is clicked. */
     public boolean button(String label) {
         return changed(textI(Fn.UI_BUTTON, label));
     }
 
+    /** A button that shows a bitmap. The id keeps it apart from other image buttons. */
     public boolean imageButton(String id, Bitmap bm, double w, double h) {
         try (Scratch s = Scratch.push()) {
             return changed(Native.i(Fn.UI_IMAGE_BUTTON, h(), s.str(id), bm.ptr(), b(w), b(h)));
         }
     }
 
+    /** Draws a bitmap at this size, with rounded corners if radius is above 0. */
     public void image(Bitmap bm, double w, double h, double radius) {
         Native.call(Fn.UI_IMAGE, h(), bm.ptr(), b(w), b(h), b(radius));
     }
@@ -320,14 +383,20 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A checkbox. Returns the new value. */
     public boolean checkbox(String label, boolean value) {
         return flag(Fn.UI_CHECKBOX, label, value);
     }
 
+    /** A toggle switch. Returns the new value. */
     public boolean toggle(String label, boolean value) {
         return flag(Fn.UI_TOGGLE, label, value);
     }
 
+    /**
+     * A radio button. value is the current choice, option is the one this button stands for, returns the
+     * new choice.
+     */
     public int radio(String label, int value, int option) {
         try (Scratch s = Scratch.push()) {
             long v = s.i32(value);
@@ -336,10 +405,12 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A slider from lo to hi. Returns the new value. */
     public double slider(String label, double value, double lo, double hi) {
         return slider(label, value, lo, hi, null);
     }
 
+    /** A slider with a printf style format for the number shown, like %.1f. */
     public double slider(String label, double value, double lo, double hi, String fmt) {
         try (Scratch s = Scratch.push()) {
             long v = s.f64(value);
@@ -348,6 +419,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A slider for whole numbers. */
     public int sliderInt(String label, int value, int lo, int hi) {
         try (Scratch s = Scratch.push()) {
             long v = s.i32(value);
@@ -356,6 +428,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A one line text input. cap is the most bytes it holds. Returns the new text. */
     public String input(String label, String text, int cap) {
         try (Scratch s = Scratch.push()) {
             long buf = s.alloc(cap);
@@ -365,6 +438,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** An input with INPUT_ flags and a hint shown while it is empty. */
     public String inputEx(String label, String text, int cap, int flags, String hint) {
         try (Scratch s = Scratch.push()) {
             long buf = s.alloc(cap);
@@ -376,10 +450,12 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** An input that shows the mask instead of the letters. */
     public String password(String label, String text, int cap) {
         return inputEx(label, text, cap, INPUT_PASSWORD, null);
     }
 
+    /** A dropdown. sel is the picked index, returns the new one. */
     public int combo(String label, int sel, String... items) {
         try (Scratch s = Scratch.push()) {
             long v = s.i32(sel);
@@ -388,12 +464,14 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A row you can click to select. Returns true when it was clicked. */
     public boolean selectable(String label, boolean selected) {
         try (Scratch s = Scratch.push()) {
             return changed(Native.i(Fn.UI_SELECTABLE, h(), s.str(label), b(selected)));
         }
     }
 
+    /** A tab bar. sel is the picked tab, returns the new one. */
     public int tabs(String id, int sel, String... names) {
         try (Scratch s = Scratch.push()) {
             long v = s.i32(sel);
@@ -402,6 +480,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A header that folds open and shut, keeps its own state. Returns true while open. */
     public boolean collapsing(String label) {
         changed = false;
         try (Scratch s = Scratch.push()) {
@@ -409,6 +488,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A collapsing header whose state is in the Flag, so you can open it from code. */
     public boolean collapsing(String label, Flag open) {
         return withFlag(Fn.UI_COLLAPSING, label, open);
     }
@@ -422,16 +502,19 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A progress bar, frac goes 0 to 1. */
     public void progress(double frac) {
         progress(frac, null);
     }
 
+    /** A progress bar with text on it. */
     public void progress(double frac, String text) {
         try (Scratch s = Scratch.push()) {
             Native.call(Fn.UI_PROGRESS, h(), b(frac), s.str(text));
         }
     }
 
+    /** A color picker. Returns the new 0xAARRGGBB. */
     public int color(String label, int argb) {
         try (Scratch s = Scratch.push()) {
             long v = s.i32(argb);
@@ -440,24 +523,29 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** Tooltip for the widget right before it. */
     public void tooltip(String text) {
         text(Fn.UI_TOOLTIP, text);
     }
 
+    /** True if the widget right before it is hovered. */
     public boolean hovered() {
         return Native.i(Fn.UI_HOVERED, h()) != 0;
     }
 
+    /** Starts a scroll area of this height. Always call scrollEnd(). */
     public boolean scrollBegin(String id, double height) {
         try (Scratch s = Scratch.push()) {
             return Native.i(Fn.UI_SCROLL_BEGIN, h(), s.str(id), b(height)) != 0;
         }
     }
 
+    /** Ends a scrollBegin(). */
     public void scrollEnd() {
         Native.call(Fn.UI_SCROLL_END, h());
     }
 
+    /** A scroll area that runs body and calls scrollEnd() for you. */
     public void scroll(String id, double height, Runnable body) {
         try {
             if (scrollBegin(id, height)) body.run();
@@ -466,132 +554,164 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** Pushes an id scope. Use it when the same labels repeat, like in a loop. */
     public void pushId(String id) {
         text(Fn.UI_PUSH_ID, id);
     }
 
+    /** Pushes a number as an id scope, the loop index is the usual pick. */
     public void pushId(int id) {
         pushId(Integer.toString(id));
     }
 
+    /** Pops the last pushId. */
     public void popId() {
         Native.call(Fn.UI_POP_ID, h());
     }
 
+    /** Starts the root panel that fills monitor 0, call it after begin(). Finish with appEnd(). */
     public boolean app(String title, int flags) {
         try (Scratch s = Scratch.push()) {
             return Native.i(Fn.UI_APP, h(), s.str(title), flags) != 0;
         }
     }
 
+    /** Ends app(). */
     public void appEnd() {
         Native.call(Fn.UI_APP_END, h());
     }
 
+    /** Starts the menu bar, needs APP_MENUBAR. Returns true if there is one to fill. */
     public boolean menubarBegin() {
         return Native.i(Fn.UI_MENUBAR_BEGIN, h()) != 0;
     }
 
+    /** Ends menubarBegin(). */
     public void menubarEnd() {
         Native.call(Fn.UI_MENUBAR_END, h());
     }
 
+    /** A menu. Returns true while open, then call menuEnd(). Nest them for submenus. */
     public boolean menuBegin(String label) {
         return textI(Fn.UI_MENU_BEGIN, label) != 0;
     }
 
+    /** Ends menuBegin(). */
     public void menuEnd() {
         Native.call(Fn.UI_MENU_END, h());
     }
 
+    /** A menu entry. Returns true when clicked. */
     public boolean menuItem(String label) {
         return menuItem(label, null, null);
     }
 
+    /** A menu entry with a shortcut shown on the right. */
     public boolean menuItem(String label, String shortcut) {
         return menuItem(label, shortcut, null);
     }
 
+    /** A menu entry with a check mark kept in the Flag. The checked flag can be null. */
     public boolean menuItem(String label, String shortcut, Flag checked) {
         try (Scratch s = Scratch.push()) {
             return changed(Native.i(Fn.UI_MENU_ITEM, h(), s.str(label), s.str(shortcut), checked == null ? 0 : checked.ptr()));
         }
     }
 
+    /** A line between menu entries. */
     public void menuSeparator() {
         Native.call(Fn.UI_MENU_SEPARATOR, h());
     }
 
+    /**
+     * A right click menu for the widget before it, or empty space. Returns true while open, then call
+     * contextEnd().
+     */
     public boolean contextBegin(String id) {
         return textI(Fn.UI_CONTEXT_BEGIN, id) != 0;
     }
 
+    /** Ends contextBegin(). */
     public void contextEnd() {
         Native.call(Fn.UI_CONTEXT_END, h());
     }
 
+    /** Opens a popup by id. */
     public void popupOpen(String id) {
         text(Fn.UI_POPUP_OPEN, id);
     }
 
+    /** Fills a popup. Returns true while it is open, then call popupEnd(). */
     public boolean popupBegin(String id) {
         return textI(Fn.UI_POPUP_BEGIN, id) != 0;
     }
 
+    /** Ends popupBegin(). */
     public void popupEnd() {
         Native.call(Fn.UI_POPUP_END, h());
     }
 
+    /** Closes the innermost open popup, menu or modal. */
     public void popupClose() {
         Native.call(Fn.UI_POPUP_CLOSE, h());
     }
 
+    /** A modal dialog, centered, dims the rest, esc closes it. Returns true while open, then call modalEnd(). */
     public boolean modalBegin(String title, Flag open) {
         try (Scratch s = Scratch.push()) {
             return Native.i(Fn.UI_MODAL_BEGIN, h(), s.str(title), open == null ? 0 : open.ptr()) != 0;
         }
     }
 
+    /** Ends modalBegin(). */
     public void modalEnd() {
         Native.call(Fn.UI_MODAL_END, h());
     }
 
+    /** Shows a short message for ms, 0 uses the config toast time. */
     public void toast(String text, int ms) {
         try (Scratch s = Scratch.push()) {
             Native.call(Fn.UI_TOAST, h(), s.str(text), ms);
         }
     }
 
+    /** Text for the status bar, needs APP_STATUSBAR. */
     public void statusbar(String text) {
         text(Fn.UI_STATUSBAR, text);
     }
 
+    /** True if the widget right before it has keyboard focus. */
     public boolean focused() {
         return Native.i(Fn.UI_FOCUSED, h()) != 0;
     }
 
+    /** Gives focus to the next widget. */
     public void setFocus() {
         Native.call(Fn.UI_SET_FOCUS, h());
     }
 
+    /** A multiline editor on the buffer, EDIT_ flags. Returns true if the text changed. */
     public boolean textEdit(String id, TextBuffer buf, double height, int flags) {
         try (Scratch s = Scratch.push()) {
             return changed(Native.i(Fn.UI_TEXT_EDIT, h(), s.str(id), buf.ptr(), buf.capacity(), b(height), flags));
         }
     }
 
+    /** Starts a table, TABLE_ flags. Add the columns, then rows with tableRow() and tableNext(), then tableEnd(). */
     public boolean tableBegin(String id, int cols, double height, int flags) {
         try (Scratch s = Scratch.push()) {
             return Native.i(Fn.UI_TABLE_BEGIN, h(), s.str(id), cols, b(height), flags) != 0;
         }
     }
 
+    /** Adds a column, width 0 shares the rest. */
     public void tableColumn(String name, double width) {
         try (Scratch s = Scratch.push()) {
             Native.call(Fn.UI_TABLE_COLUMN, h(), s.str(name), b(width));
         }
     }
 
+    /** Call after the columns. Says if the sort changed this frame and to what, pass the current col and desc. */
     public Sort tableSort(int col, boolean desc) {
         try (Scratch s = Scratch.push()) {
             long c = s.i32(col), d = s.i32(desc ? 1 : 0);
@@ -600,28 +720,34 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** Starts a new row. */
     public void tableRow() {
         Native.call(Fn.UI_TABLE_ROW, h());
     }
 
+    /** Moves to the next cell. */
     public void tableNext() {
         Native.call(Fn.UI_TABLE_NEXT, h());
     }
 
+    /** Ends the table. */
     public void tableEnd() {
         Native.call(Fn.UI_TABLE_END, h());
     }
 
+    /** A tree node. Returns true while open, then call treeEnd(). */
     public boolean tree(String label, Flag open) {
         try (Scratch s = Scratch.push()) {
             return Native.i(Fn.UI_TREE, h(), s.str(label), open == null ? 0 : open.ptr()) != 0;
         }
     }
 
+    /** Ends an open tree node. */
     public void treeEnd() {
         Native.call(Fn.UI_TREE_END, h());
     }
 
+    /** For long lists in a scroll area. Returns {first, last}, only draw those rows. */
     public int[] listClip(int count, double rowH) {
         try (Scratch s = Scratch.push()) {
             long a = s.i32(0), z = s.i32(0);
@@ -630,6 +756,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A number you change by dragging it. Returns the new value. */
     public double dragFloat(String label, double value, double speed, double lo, double hi, String fmt) {
         try (Scratch s = Scratch.push()) {
             long v = s.f64(value);
@@ -638,6 +765,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A whole number you change by dragging it. */
     public int dragInt(String label, int value, double speed, int lo, int hi) {
         try (Scratch s = Scratch.push()) {
             long v = s.i32(value);
@@ -646,6 +774,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A number box with plus and minus buttons that move by step. */
     public double number(String label, double value, double step, String fmt) {
         try (Scratch s = Scratch.push()) {
             long v = s.f64(value);
@@ -672,48 +801,64 @@ public final class Ui implements AutoCloseable {
         return new double[] {lo, hi};
     }
 
+    /** A line plot, the range comes from the values. */
     public void plotLines(String label, float[] values, double height) {
         double[] r = range(values);
         plot(Fn.UI_PLOT_LINES, label, values, r[0], r[1], height);
     }
 
+    /** A line plot with a fixed range. */
     public void plotLines(String label, float[] values, double lo, double hi, double height) {
         plot(Fn.UI_PLOT_LINES, label, values, lo, hi, height);
     }
 
+    /** A bar plot, the range comes from the values. */
     public void plotBars(String label, float[] values, double height) {
         double[] r = range(values);
         plot(Fn.UI_PLOT_BARS, label, values, r[0], r[1], height);
     }
 
+    /** A bar plot with a fixed range. */
     public void plotBars(String label, float[] values, double lo, double hi, double height) {
         plot(Fn.UI_PLOT_BARS, label, values, lo, hi, height);
     }
 
+    /**
+     * Starts a resizable two pane split. Fill the first pane, call splitNext(), fill the second, then
+     * splitEnd().
+     */
     public boolean splitBegin(String id, Split split) {
         try (Scratch s = Scratch.push()) {
             return Native.i(Fn.UI_SPLIT_BEGIN, h(), s.str(id), b(split.vertical), split.ptr()) != 0;
         }
     }
 
+    /** Switches to the second pane. */
     public void splitNext() {
         Native.call(Fn.UI_SPLIT_NEXT, h());
     }
 
+    /** Ends the split. */
     public void splitEnd() {
         Native.call(Fn.UI_SPLIT_END, h());
     }
 
+    /** Makes the widget before it draggable, carrying text. Returns true while it is dragged. */
     public boolean dragSource(String type, String data) {
         return dragSource(type, data.getBytes(StandardCharsets.UTF_8));
     }
 
+    /** Makes the widget before it draggable, carrying bytes. */
     public boolean dragSource(String type, byte[] data) {
         try (Scratch s = Scratch.push()) {
             return Native.i(Fn.UI_DRAG_SOURCE, h(), s.str(type), s.bytes(data), data.length) != 0;
         }
     }
 
+    /**
+     * Makes the widget before it accept a drop of that type. Returns the dropped bytes, or null if nothing
+     * landed.
+     */
     public byte[] dropTarget(String type, int cap) {
         try (Scratch s = Scratch.push()) {
             long buf = s.alloc(cap);
@@ -725,57 +870,69 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A loading spinner, 0 uses the theme size. */
     public void spinner(double size) {
         Native.call(Fn.UI_SPINNER, h(), b(size));
     }
 
+    /** A text link. Returns true when clicked. */
     public boolean link(String text) {
         return changed(textI(Fn.UI_LINK, text));
     }
 
+    /** A small colored tag in the theme badge color. */
     public void badge(String text) {
         badge(text, theme.accent());
     }
 
+    /** A small tag in this color. */
     public void badge(String text, int argb) {
         try (Scratch s = Scratch.push()) {
             Native.call(Fn.UI_BADGE, h(), s.str(text), argb);
         }
     }
 
+    /** Puts the next widget at x,y from the content top left (scroll included), the flow doesnt move. */
     public void pos(double x, double y) {
         Native.call(Fn.UI_POS, h(), b(x), b(y));
     }
 
+    /** Size of the next widget, 0 means its own size for that side. */
     public void size(double w, double h) {
         Native.call(Fn.UI_SIZE, h(), b(w), b(h));
     }
 
+    /** Changes a theme color until it is popped. Throws if the Style is a number. */
     public void pushColor(Style what, int argb) {
         if (!what.color()) throw new IllegalArgumentException(what + " isnt a color, use pushNum");
         Native.call(Fn.UI_PUSH_COLOR, h(), what.ordinal(), argb);
     }
 
+    /** Changes a theme number until it is popped. Throws if the Style is a color. */
     public void pushNum(Style what, double v) {
         if (what.color()) throw new IllegalArgumentException(what + " is a color, use pushColor");
         Native.call(Fn.UI_PUSH_NUM, h(), what.ordinal(), b(v));
     }
 
+    /** Per corner radii for the next widgets, beats the RADIUS style until popped. */
     public void pushRadii(Radii r) {
         try (Scratch s = Scratch.push()) {
             Native.call(Fn.UI_PUSH_RADII, h(), s.radii(r));
         }
     }
 
+    /** Per corner radii, top left, top right, bottom right, bottom left. */
     public void pushRadii(double tl, double tr, double br, double bl) {
         pushRadii(new Radii(tl, tr, br, bl));
     }
 
+    /** Uses this font until popped, null is the built in one. */
     public void pushFont(Font f) {
         Native.call(Fn.UI_PUSH_FONT, h(), Font.handle(f));
         if (f != null) kept.add(f);
     }
 
+    /** Uses a nine slice skin for a SKIN_ slot until popped, null means no skin. */
     public void pushSkin(int kind, Skin skin) {
         if (kind < 0 || kind >= SKIN_COUNT) throw new IllegalArgumentException("skin kind is one of the SKIN_ numbers, not " + kind);
         try (Scratch s = Scratch.push()) {
@@ -789,36 +946,44 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** Swaps in a whole theme with one push. */
     public void pushTheme(Theme t) {
         Native.call(Fn.UI_PUSH_THEME, h(), t.ptr());
         kept.add(t);
     }
 
+    /** Uses your own bitmap for an icon until popped. */
     public void pushIcon(Icon which, Bitmap bm) {
         Native.call(Fn.UI_PUSH_ICON, h(), which.ordinal(), bm == null ? 0 : bm.ptr());
         if (bm != null) kept.add(bm);
     }
 
+    /** Pops the last push, of any kind. */
     public void pop() {
         pop(1);
     }
 
+    /** Pops the last n pushes, of any kind. */
     public void pop(int n) {
         Native.call(Fn.UI_POP, h(), n);
     }
 
+    /** Starts a chained set of pushes, use it in try with resources so they pop by themselves. */
     public Styled style() {
         return new Styled(this);
     }
 
+    /** A custom widget of this size, draw it on canvas(). The Item says what the mouse did. */
     public Item custom(String id, double w, double h) {
         return customBits(id, w, h, 0);
     }
 
+    /** A custom widget with ItemFlag options. */
     public Item custom(String id, double w, double h, ItemFlag... flags) {
         return customBits(id, w, h, ItemFlag.bits(Arrays.asList(flags)));
     }
 
+    /** A custom widget with ItemFlag options as a set. */
     public Item custom(String id, double w, double h, Set<ItemFlag> flags) {
         return customBits(id, w, h, ItemFlag.bits(flags));
     }
@@ -831,6 +996,7 @@ public final class Ui implements AutoCloseable {
         }
     }
 
+    /** A canvas to draw on right where the ui is, clipped like the widgets. null if there is none. */
     public Canvas canvas() {
         long p = Native.call(Fn.UI_CANVAS, h());
         if (p == 0) return null;
@@ -839,6 +1005,7 @@ public final class Ui implements AutoCloseable {
         return c;
     }
 
+    /** n doubles kept per id between frames, zero the first time. */
     public DoubleBuffer store(String id, int n) {
         if (n <= 0) throw new IllegalArgumentException("store needs at least 1 double, not " + n);
         long p;

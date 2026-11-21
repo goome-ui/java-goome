@@ -4,6 +4,10 @@ import static io.github.goomeui.Native.N;
 
 import java.nio.IntBuffer;
 
+/**
+ * A picture in memory, premultiplied argb, that you can draw on a Canvas or hand to the ui. Close it when
+ * you are done.
+ */
 public final class Bitmap implements AutoCloseable {
     private static final Layout L = Layout.BITMAP;
     private long p;
@@ -22,6 +26,7 @@ public final class Bitmap implements AutoCloseable {
         return b;
     }
 
+    /** Loads png, jpeg, bmp, ppm or qoi. It picks by content, not by file name. */
     public static Bitmap load(String path) {
         Bitmap b = new Bitmap();
         try (Scratch s = Scratch.push()) {
@@ -29,6 +34,7 @@ public final class Bitmap implements AutoCloseable {
         }
     }
 
+    /** Loads an image from bytes in memory, same formats as load. */
     public static Bitmap fromBytes(byte[] data) {
         Bitmap b = new Bitmap();
         long mem = N.calloc(data.length);
@@ -40,6 +46,7 @@ public final class Bitmap implements AutoCloseable {
         }
     }
 
+    /** Makes a bitmap from plain argb pixels, they get copied. */
     public static Bitmap fromArgb(int[] argb, int w, int h) {
         if (w < 0 || h < 0 || argb.length < w * h) throw new IllegalArgumentException("need " + w * h + " pixels, got " + argb.length);
         Bitmap b = new Bitmap();
@@ -50,6 +57,7 @@ public final class Bitmap implements AutoCloseable {
         }
     }
 
+    /** Makes a bitmap from premultiplied pixels with a stride in pixels, they get copied. */
     public static Bitmap wrap(int[] premul, int w, int h, int stride) {
         int n = h > 0 ? (h - 1) * stride + w : 0;
         if (w < 0 || h < 0 || stride < w || premul.length < n) throw new IllegalArgumentException("need " + n + " pixels for " + w + "x" + h + " stride " + stride);
@@ -68,26 +76,32 @@ public final class Bitmap implements AutoCloseable {
         return p;
     }
 
+    /** True once close() ran. */
     public boolean closed() {
         return p == 0;
     }
 
+    /** Width in px. */
     public int w() {
         return N.getInt(ptr() + L.at("w"));
     }
 
+    /** Height in px. */
     public int h() {
         return N.getInt(ptr() + L.at("h"));
     }
 
+    /** Row length in pixels. */
     public int stride() {
         return N.getInt(ptr() + L.at("stride"));
     }
 
+    /** True if goome owns the pixels and frees them with the bitmap. */
     public boolean owned() {
         return N.getInt(ptr() + L.at("owned")) != 0;
     }
 
+    /** The pixels as a view on the native memory. */
     public IntBuffer pixels() {
         long q = ptr();
         long px = N.getLong(q + L.at("px"));
@@ -96,6 +110,7 @@ public final class Bitmap implements AutoCloseable {
         return Native.view(px, 4L * n).asIntBuffer();
     }
 
+    /** Frees the bitmap. Anything drawing with it must stop first. */
     @Override
     public void close() {
         if (p == 0) return;

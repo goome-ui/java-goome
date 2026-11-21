@@ -7,12 +7,24 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.function.BooleanSupplier;
 
+/**
+ * A screen grab or a frame from Goome. The pixels live in native memory and are only good until the next
+ * grab or frame, copy() them to keep them.
+ */
 public final class Image {
     private final long px;
+    /** Size in real px, stride in pixels. */
     public final int w, h, stride;
+    /** Where it sits on the desktop, logical coords. */
     public final Rect area;
+    /** Which monitor it came from. */
     public final int mon;
+    /**
+     * hasSelf means our own overlay is in the grab, mask it with Goome.alphaAt(). hasCursor means the mouse
+     * got baked in at cursor.
+     */
     public final boolean hasSelf, hasCursor;
+    /** Where the mouse got baked in, logical. */
     public final Rect cursor;
     private final BooleanSupplier fresh;
     private final String what;
@@ -32,6 +44,7 @@ public final class Image {
         this.what = what;
     }
 
+    /** False once a newer grab replaced this one. */
     public boolean fresh() {
         return fresh.getAsBoolean();
     }
@@ -45,18 +58,21 @@ public final class Image {
         return px;
     }
 
+    /** The pixels as a view on the native memory, 0xFFRRGGBB for grabs. Only good while the image is fresh. */
     public IntBuffer pixels() {
         check();
         if (px == 0 || h <= 0) return IntBuffer.allocate(0);
         return Native.view(px, 4L * h * stride).asIntBuffer();
     }
 
+    /** One pixel. */
     public int pixel(int x, int y) {
         check();
         if (x < 0 || y < 0 || x >= w || y >= h) throw new IndexOutOfBoundsException("pixel " + x + "," + y + " is outside " + w + "x" + h);
         return N.getInt(px + 4L * ((long) y * stride + x));
     }
 
+    /** A copy of the pixels without the stride padding, w times h ints. */
     public int[] copy() {
         IntBuffer v = pixels();
         int[] out = new int[w * h];
@@ -67,6 +83,7 @@ public final class Image {
         return out;
     }
 
+    /** Copies rect r (real px, null for all of it) into a direct buffer. Stride is in bytes. */
     public void copyTo(ByteBuffer dst, int dstStride, PixelFormat fmt, Rect r) {
         check();
         copy(px, w, h, stride, dst, dstStride, fmt, r);
@@ -119,6 +136,7 @@ public final class Image {
         return a << 24 | r << 16 | g << 8 | b;
     }
 
+    /** Writes the image to a ppm file. */
     public void savePpm(String path) {
         check();
         Goome.savePpm(path, px, w, h, stride);
