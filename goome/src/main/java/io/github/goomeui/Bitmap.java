@@ -48,7 +48,7 @@ public final class Bitmap implements AutoCloseable {
 
     /** Makes a bitmap from plain argb pixels, they get copied. */
     public static Bitmap fromArgb(int[] argb, int w, int h) {
-        if (w < 0 || h < 0 || argb.length < w * h) throw new IllegalArgumentException("need " + w * h + " pixels, got " + argb.length);
+        if (w < 0 || h < 0 || argb.length < (long) w * h) throw new IllegalArgumentException("need " + (long) w * h + " pixels, got " + argb.length);
         Bitmap b = new Bitmap();
         try (Scratch s = Scratch.push()) {
             long px = s.alloc(4L * Math.max(1, w * h));
@@ -59,11 +59,11 @@ public final class Bitmap implements AutoCloseable {
 
     /** Makes a bitmap from premultiplied pixels with a stride in pixels, they get copied. */
     public static Bitmap wrap(int[] premul, int w, int h, int stride) {
-        int n = h > 0 ? (h - 1) * stride + w : 0;
+        long n = h > 0 ? (long) (h - 1) * stride + w : 0;
         if (w < 0 || h < 0 || stride < w || premul.length < n) throw new IllegalArgumentException("need " + n + " pixels for " + w + "x" + h + " stride " + stride);
         Bitmap b = new Bitmap();
-        b.ownPx = N.calloc(4L * Math.max(1, h * stride));
-        Native.view(b.ownPx, 4L * n).asIntBuffer().put(premul, 0, n);
+        b.ownPx = N.calloc(4L * Math.max(1, (long) h * stride));
+        Native.view(b.ownPx, 4L * n).asIntBuffer().put(premul, 0, (int) n);
         N.putLong(b.p + L.at("px"), b.ownPx);
         N.putInt(b.p + L.at("w"), w);
         N.putInt(b.p + L.at("h"), h);

@@ -31,7 +31,7 @@ public final class Canvas implements AutoCloseable {
     public static Canvas create(int w, int h, int stride, double scale) {
         if (w < 0 || h < 0 || stride < w) throw new IllegalArgumentException("bad canvas size " + w + "x" + h + " stride " + stride);
         long c = N.calloc(L.size);
-        long px = N.calloc(4L * Math.max(1, h * stride));
+        long px = N.calloc(4L * Math.max(1, (long) h * stride));
         N.putLong(c + L.at("px"), px);
         N.putInt(c + L.at("w"), w);
         N.putInt(c + L.at("h"), h);
@@ -191,7 +191,7 @@ public final class Canvas implements AutoCloseable {
 
     /** Draws raw argb pixels of size iw by ih stretched into the rect. */
     public void image(double x, double y, double w, double h, int[] argb, int iw, int ih) {
-        if (argb.length < iw * ih) throw new IllegalArgumentException("need " + iw * ih + " pixels, got " + argb.length);
+        if (argb.length < (long) iw * ih) throw new IllegalArgumentException("need " + (long) iw * ih + " pixels, got " + argb.length);
         try (Scratch s = Scratch.push()) {
             long px = s.alloc(4L * iw * ih);
             Native.view(px, 4L * iw * ih).asIntBuffer().put(argb, 0, iw * ih);

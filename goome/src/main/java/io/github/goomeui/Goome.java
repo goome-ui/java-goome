@@ -615,11 +615,11 @@ public final class Goome implements AutoCloseable {
 
     /** Writes pixels to a ppm file. Stride is in pixels. */
     public static void savePpm(String path, int[] px, int w, int h, int stride) {
-        int n = h > 0 ? (h - 1) * stride + w : 0;
-        if (px.length < n) throw new IllegalArgumentException("need " + n + " pixels, got " + px.length);
+        long n = h > 0 ? (long) (h - 1) * stride + w : 0;
+        if (w < 0 || h < 0 || stride < w || px.length < n) throw new IllegalArgumentException("need " + n + " pixels for " + w + "x" + h + " stride " + stride + ", got " + px.length);
         try (Scratch s = Scratch.push()) {
             long mem = s.alloc(4L * Math.max(1, n));
-            Native.view(mem, 4L * n).asIntBuffer().put(px, 0, n);
+            Native.view(mem, 4L * n).asIntBuffer().put(px, 0, (int) n);
             savePpm(path, mem, w, h, stride);
         }
     }
