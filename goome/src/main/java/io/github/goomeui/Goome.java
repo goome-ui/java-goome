@@ -401,6 +401,7 @@ public final class Goome implements AutoCloseable {
     /** Sets the window client size, logical px. */
     public void size(int w, int h) {
         check(Native.i(Fn.WINDOW_SIZE, h(), w, h));
+        began++;
     }
 
     /** Resizes a window or an offscreen surface. */
@@ -412,6 +413,7 @@ public final class Goome implements AutoCloseable {
     public void resize(int w, int h, double scale) {
         if (mode() == MODE_OFFSCREEN) check(Native.i(Fn.RESIZE, h(), w, h, b(scale)));
         else size(w, h);
+        began++;
         dirtySeen = -1;
     }
 
